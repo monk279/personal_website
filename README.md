@@ -60,6 +60,20 @@ Astro serves the public site on `http://127.0.0.1:4321` and proxies `/api/*` to 
 1. Register `zhaohe.me`.
 2. Add the zone to Cloudflare and set registrar nameservers to Cloudflare's assigned nameservers.
 3. Create DNS-only `A` records for `zhaohe.me` and `www` pointing to the VPS IP.
+
+With a Cloudflare API token that has DNS write access to the `zhaohe.me` zone:
+
+```bash
+CLOUDFLARE_API_TOKEN=<token> CLOUDFLARE_ZONE_ID=<zone-id> VPS_IP=<vps-ip> ./scripts/setup-cloudflare-dns.sh
+```
+
+The script creates or updates DNS-only `A` records for `zhaohe.me` and `www.zhaohe.me` with `proxied` disabled. This lets Caddy request HTTPS certificates directly during the first launch.
+
+Manual equivalent in the Cloudflare dashboard:
+
+- `A` record: `zhaohe.me` -> `<vps-ip>`, DNS-only
+- `A` record: `www` -> `<vps-ip>`, DNS-only
+
 4. On an Ubuntu/Debian VPS, install Docker Engine, the Compose plugin, Git, and UFW.
 
 For first-time server setup, make sure the VPS has an SSH key with access to the GitHub repo, then clone the repo and run:
