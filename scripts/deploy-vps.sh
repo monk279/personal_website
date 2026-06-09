@@ -16,19 +16,11 @@ fi
 
 cd "$APP_DIR"
 
-if [ ! -f ".env" ]; then
-  echo "Missing $APP_DIR/.env. Create it from .env.example before deploying." >&2
-  exit 1
-fi
-
-if ! grep -q "^POSTGRES_PASSWORD=.\+" .env; then
-  echo "POSTGRES_PASSWORD is missing in .env." >&2
-  exit 1
-fi
-
 git fetch origin "$BRANCH"
 git checkout "$BRANCH"
 git pull --ff-only origin "$BRANCH"
+
+./scripts/validate-production-env.sh
 
 mkdir -p public/uploads backups
 

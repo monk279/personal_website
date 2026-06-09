@@ -115,6 +115,12 @@ docker compose run --rm --no-deps app bun run admin:hash -- "your-admin-password
 
 Edit `.env` so `POSTGRES_PASSWORD` is a strong generated value, `DATABASE_URL` uses the same PostgreSQL password, `SESSION_SECRET` uses the generated random value, `ADMIN_EMAIL` is your login email, and `ADMIN_PASSWORD_HASH` is the generated password hash.
 
+Check the production environment before launch:
+
+```bash
+./scripts/validate-production-env.sh
+```
+
 6. Launch:
 
 ```bash
