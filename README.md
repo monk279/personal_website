@@ -74,7 +74,35 @@ Manual equivalent in the Cloudflare dashboard:
 - `A` record: `zhaohe.me` -> `<vps-ip>`, DNS-only
 - `A` record: `www` -> `<vps-ip>`, DNS-only
 
-4. On an Ubuntu/Debian VPS, install Docker Engine, the Compose plugin, Git, and UFW.
+4. Run the all-in-one VPS deploy script.
+
+From a repo checkout on the VPS, as `root` or a sudo-capable user:
+
+```bash
+cd /opt/zhaohe-site
+./scripts/deploy-all-in-one-vps.sh
+```
+
+If the repo is still in the temporary bootstrap directory, run:
+
+```bash
+cd /tmp/zhaohe-site-bootstrap
+./scripts/deploy-all-in-one-vps.sh
+```
+
+The script installs Docker/Compose if needed, prepares `/opt/zhaohe-site`, prompts for the website admin email/password, generates production secrets, writes `.env`, builds containers, runs migrations/seeding, starts the stack, and prints the public/admin URLs. It does not require `nano`.
+
+Optional: if you want it to configure Cloudflare DNS too, pass the VPS IP, Cloudflare zone ID, and a Cloudflare API token with DNS write access:
+
+```bash
+VPS_IP=<vps-ip> CLOUDFLARE_ZONE_ID=<zone-id> CLOUDFLARE_API_TOKEN=<token> ./scripts/deploy-all-in-one-vps.sh
+```
+
+## Manual Deployment
+
+Use this only if you need to debug the lower-level steps.
+
+On an Ubuntu/Debian VPS, install Docker Engine, the Compose plugin, Git, and UFW.
 
 For first-time server setup, make sure the VPS has an SSH key with access to the GitHub repo, then clone the repo and run:
 
