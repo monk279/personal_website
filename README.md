@@ -124,6 +124,7 @@ docker compose ps
 curl -I https://zhaohe.me
 curl -fsS https://zhaohe.me/api/health
 docker compose logs --tail=100 caddy
+EXPECTED_IP=<vps-ip> ./scripts/verify-production.sh
 ```
 
 ## Tests
