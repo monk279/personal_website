@@ -61,18 +61,28 @@ Astro serves the public site on `http://127.0.0.1:4321` and proxies `/api/*` to 
 2. Add the zone to Cloudflare and set registrar nameservers to Cloudflare's assigned nameservers.
 3. Create DNS-only `A` records for `zhaohe.me` and `www` pointing to the VPS IP.
 4. On an Ubuntu/Debian VPS, install Docker Engine, the Compose plugin, Git, and UFW.
-5. Open firewall ports:
+
+For first-time server setup, make sure the VPS has an SSH key with access to the GitHub repo, then clone the repo and run:
 
 ```bash
+sudo apt-get update
+sudo apt-get install -y git
+git clone git@github.com:monk279/personal_website.git /tmp/zhaohe-site-bootstrap
+cd /tmp/zhaohe-site-bootstrap
+./scripts/bootstrap-vps.sh
+```
+
+The bootstrap script installs dependencies, opens ports `22`, `80`, and `443`, prepares `/opt/zhaohe-site`, clones or updates the repo, and creates `.env` from `.env.example`.
+
+Manual equivalent:
+
+```bash
+sudo apt-get update
+sudo apt-get install -y ca-certificates curl git ufw
 sudo ufw allow OpenSSH
 sudo ufw allow 80/tcp
 sudo ufw allow 443/tcp
 sudo ufw enable
-```
-
-6. Clone the project and create persistent local directories:
-
-```bash
 sudo mkdir -p /opt/zhaohe-site
 sudo chown "$USER":"$USER" /opt/zhaohe-site
 git clone git@github.com:monk279/personal_website.git /opt/zhaohe-site
@@ -80,17 +90,18 @@ cd /opt/zhaohe-site
 mkdir -p public/uploads backups
 ```
 
-7. Create production secrets:
+5. Create production secrets:
 
 ```bash
 cp .env.example .env
 openssl rand -base64 32
-bun run admin:hash -- "your-admin-password"
+POSTGRES_PASSWORD=temporary-build-value docker compose build app
+docker compose run --rm --no-deps app bun run admin:hash -- "your-admin-password"
 ```
 
 Edit `.env` so `POSTGRES_PASSWORD` is a strong generated value, `DATABASE_URL` uses the same PostgreSQL password, `SESSION_SECRET` uses the generated random value, `ADMIN_EMAIL` is your login email, and `ADMIN_PASSWORD_HASH` is the generated password hash.
 
-8. Launch:
+6. Launch:
 
 ```bash
 docker compose up -d --build
