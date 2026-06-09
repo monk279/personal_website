@@ -13,6 +13,9 @@ get_env() {
   awk -F= -v key="$key" '
     $0 !~ /^[[:space:]]*#/ && $1 == key {
       sub(/^[^=]*=/, "")
+      if ($0 ~ /^'\''.*'\''$/ || $0 ~ /^".*"$/) {
+        $0 = substr($0, 2, length($0) - 2)
+      }
       print
       exit
     }

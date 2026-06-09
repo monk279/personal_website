@@ -8,7 +8,7 @@ Personal website for `zhaohe.me`, built with Astro, Hono, Bun, Drizzle, and Post
 bun install
 cp .env.example .env
 bun run admin:hash -- "your-admin-password"
-# paste the generated hash into ADMIN_PASSWORD_HASH in .env
+# paste the generated hash into ADMIN_PASSWORD_HASH in .env, wrapped in single quotes
 # add ALPHA_VANTAGE_API_KEY for stock/ETF search and quote refresh
 ```
 
@@ -113,7 +113,7 @@ POSTGRES_PASSWORD=temporary-build-value docker compose build app
 docker compose run --rm --no-deps app bun run admin:hash -- "your-admin-password"
 ```
 
-Edit `.env` so `POSTGRES_PASSWORD` is a strong generated value, `DATABASE_URL` uses the same PostgreSQL password, `SESSION_SECRET` uses the generated random value, `ADMIN_EMAIL` is your login email, and `ADMIN_PASSWORD_HASH` is the generated password hash.
+Edit `.env` so `POSTGRES_PASSWORD` is a strong generated value, `DATABASE_URL` uses the same PostgreSQL password, `SESSION_SECRET` uses the generated random value, `ADMIN_EMAIL` is your login email, and `ADMIN_PASSWORD_HASH` is the generated password hash wrapped in single quotes.
 
 Check the production environment before launch:
 
