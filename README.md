@@ -60,8 +60,37 @@ Astro serves the public site on `http://127.0.0.1:4321` and proxies `/api/*` to 
 1. Register `zhaohe.me`.
 2. Add the zone to Cloudflare and set registrar nameservers to Cloudflare's assigned nameservers.
 3. Create DNS-only `A` records for `zhaohe.me` and `www` pointing to the VPS IP.
-4. On an Ubuntu/Debian VPS, install Docker Engine and the Compose plugin.
-5. Copy the project to `/opt/zhaohe-site`, create `.env`, then run:
+4. On an Ubuntu/Debian VPS, install Docker Engine, the Compose plugin, Git, and UFW.
+5. Open firewall ports:
+
+```bash
+sudo ufw allow OpenSSH
+sudo ufw allow 80/tcp
+sudo ufw allow 443/tcp
+sudo ufw enable
+```
+
+6. Clone the project and create persistent local directories:
+
+```bash
+sudo mkdir -p /opt/zhaohe-site
+sudo chown "$USER":"$USER" /opt/zhaohe-site
+git clone git@github.com:monk279/personal_website.git /opt/zhaohe-site
+cd /opt/zhaohe-site
+mkdir -p public/uploads backups
+```
+
+7. Create production secrets:
+
+```bash
+cp .env.example .env
+openssl rand -base64 32
+bun run admin:hash -- "your-admin-password"
+```
+
+Edit `.env` so `POSTGRES_PASSWORD` is a strong generated value, `DATABASE_URL` uses the same PostgreSQL password, `SESSION_SECRET` uses the generated random value, `ADMIN_EMAIL` is your login email, and `ADMIN_PASSWORD_HASH` is the generated password hash.
+
+8. Launch:
 
 ```bash
 docker compose up -d --build
@@ -69,7 +98,22 @@ docker compose exec app bun run db:migrate
 docker compose exec app bun run db:seed
 ```
 
+After the first launch, repeat deployments can use:
+
+```bash
+./scripts/deploy-vps.sh
+```
+
 Caddy terminates HTTPS automatically when DNS is correct and ports `80` and `443` are open. PostgreSQL data, Caddy state, backups, and uploaded assets are stored in Docker/local volumes.
+
+Verify production after launch:
+
+```bash
+docker compose ps
+curl -I https://zhaohe.me
+curl -fsS https://zhaohe.me/api/health
+docker compose logs --tail=100 caddy
+```
 
 ## Tests
 
