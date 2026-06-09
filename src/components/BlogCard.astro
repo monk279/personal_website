@@ -1,0 +1,28 @@
+---
+import type { BlogPost } from "@/lib/posts";
+import { formatDate } from "@/lib/format";
+import { labels, localePath } from "@/lib/i18n";
+import type { Locale } from "@/config/site";
+
+type Props = {
+  post: BlogPost;
+  locale: Locale;
+};
+
+const { post, locale } = Astro.props;
+const t = labels(locale);
+const href = localePath(locale, `/blog/${post.slug}`);
+---
+
+<article class="post-card weblog-entry">
+  <div class="meta">
+    <span>{formatDate(post.publishedAt, locale)}</span>
+    <span>{post.category}</span>
+  </div>
+  <h3><a href={href}>{post.title}</a></h3>
+  <p>{post.description}</p>
+  <div class="tag-row" style="margin-top:auto">
+    {post.tags.map((tag) => <a class="tag" href={localePath(locale, `/tags/${encodeURIComponent(tag)}`)}>{tag}</a>)}
+  </div>
+  <p><a class="read-link" href={href}>{t.readMore}</a></p>
+</article>

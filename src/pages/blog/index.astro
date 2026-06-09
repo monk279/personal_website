@@ -1,0 +1,46 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import BlogCard from "@/components/BlogCard.astro";
+import EditablePostsList from "@/components/EditablePostsList.astro";
+import { getPosts, getTags } from "@/lib/posts";
+
+const locale = "en";
+const posts = getPosts(locale);
+const tags = getTags(locale);
+---
+
+<BaseLayout title="Blogs" description="Blogs and notes from Zhaohe." locale={locale} path="/blog">
+  <section class="container ben-page-hero ben-page-hero-compact">
+    <p class="ben-kicker">Blogs</p>
+    <h1>Writing, notes, and the chronological archive.</h1>
+    <p>Posts are a public notebook for software, markets, personal systems, and the process of building a durable life online.</p>
+  </section>
+
+  <section class="ben-section ben-section-last">
+    <div class="container">
+    <div class="weblog-tools">
+      <label>Search posts<input type="search" placeholder="software, investing, notes..." data-blog-search /></label>
+      <a class="ben-action" href="/blog?view=archive">Archive view</a>
+    </div>
+    <div class="tag-row" style="margin-bottom:1rem">
+      {tags.map((tag) => <a class="tag" href={`/tags/${encodeURIComponent(tag)}`}>{tag}</a>)}
+    </div>
+    <EditablePostsList locale={locale} limit={20} />
+    <div class="ben-feature-list" data-blog-list>
+      {posts.map((post) => <BlogCard post={post} locale={locale} />)}
+    </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<script>
+  const search = document.querySelector("[data-blog-search]") as HTMLInputElement | null;
+  const cards = Array.from(document.querySelectorAll("[data-blog-list] article"));
+  search?.addEventListener("input", () => {
+    const query = search.value.trim().toLowerCase();
+    for (const card of cards) {
+      const text = card.textContent?.toLowerCase() || "";
+      (card as HTMLElement).hidden = query.length > 0 && !text.includes(query);
+    }
+  });
+</script>

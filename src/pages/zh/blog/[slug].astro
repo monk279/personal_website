@@ -1,0 +1,31 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import CommentSection from "@/components/CommentSection.astro";
+import { formatDate } from "@/lib/format";
+import { getPosts } from "@/lib/posts";
+
+export function getStaticPaths() {
+  return getPosts("zh").map((post) => ({ params: { slug: post.slug }, props: { post } }));
+}
+
+const { post } = Astro.props;
+const Content = post.Content as any;
+---
+
+<BaseLayout title={post.title} description={post.description} locale="zh" path={`/zh/blog/${post.slug}`}>
+  <article class="prose">
+    <p class="eyebrow">{post.category}</p>
+    <h1>{post.title}</h1>
+    <p class="lead">{post.description}</p>
+    <div class="meta">
+      <span>{formatDate(post.publishedAt, "zh")}</span>
+      {post.updatedAt && <span>更新于 {formatDate(post.updatedAt, "zh")}</span>}
+    </div>
+    {post.heroImage && <img src={post.heroImage} alt="" />}
+    <Content />
+    <div class="tag-row">
+      {post.tags.map((tag) => <a class="tag" href={`/zh/tags/${encodeURIComponent(tag)}`}>{tag}</a>)}
+    </div>
+  </article>
+  <CommentSection locale="zh" slug={post.slug} />
+</BaseLayout>

@@ -1,0 +1,23 @@
+---
+import type { Locale } from "@/config/site";
+
+type Props = {
+  locale: Locale;
+};
+
+const { locale } = Astro.props;
+---
+
+<script is:inline define:vars={{ locale }}>
+  fetch(`/api/content/profile?lang=${locale}`)
+    .then((response) => response.ok ? response.json() : Promise.reject())
+    .then((data) => {
+      if (!data.profile) return;
+      for (const node of document.querySelectorAll("[data-profile-field]")) {
+        const field = node.getAttribute("data-profile-field");
+        const value = data.profile[field];
+        if (typeof value === "string" && value.trim()) node.textContent = value;
+      }
+    })
+    .catch(() => {});
+</script>

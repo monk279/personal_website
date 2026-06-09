@@ -1,0 +1,40 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import { site } from "@/config/site";
+---
+
+<BaseLayout title="About & Contact" description={site.profile.en.about} locale="en" path="/about">
+  <section class="container ben-page-hero ben-page-hero-compact">
+    <p class="ben-kicker">About & Contact</p>
+    <h1>A compact home base.</h1>
+    <p data-profile-field="bio">{site.profile.en.about}</p>
+  </section>
+
+  <section class="ben-section">
+    <div class="container ben-promo-grid">
+      <article class="ben-promo">
+        <p class="ben-kicker">Writing</p>
+        <h2>Durable notes over noisy feeds.</h2>
+        <p>The writing system is intentionally plain: posts can live in the repository as Markdown/MDX, while web-authored posts can be managed from the owner studio.</p>
+        <p><a class="ben-action" href="/blog">Read blogs</a></p>
+      </article>
+      <article class="ben-promo">
+        <p class="ben-kicker">Portfolio</p>
+        <h2>Process without private account details.</h2>
+        <p>The public portfolio page shares allocation and percentage returns without exposing quantities, prices, cost basis, market value, or account size.</p>
+        <p><a class="ben-action" href="/portfolio">View portfolio</a></p>
+      </article>
+    </div>
+  </section>
+
+  <section class="ben-section ben-section-last">
+    <div class="container ben-notes">
+      <div>
+        <p class="ben-kicker">Contact</p>
+        <h2>Get in touch.</h2>
+      </div>
+      <p>Email: <a href={`mailto:${site.email}`}>{site.email}</a></p>
+      <p>The management page is <code>/admin</code>; it is private and only for the site owner.</p>
+    </div>
+  </section>
+</BaseLayout>

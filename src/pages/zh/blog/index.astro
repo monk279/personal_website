@@ -1,0 +1,46 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import BlogCard from "@/components/BlogCard.astro";
+import EditablePostsList from "@/components/EditablePostsList.astro";
+import { getPosts, getTags } from "@/lib/posts";
+
+const locale = "zh";
+const posts = getPosts(locale);
+const tags = getTags(locale);
+---
+
+<BaseLayout title="博客" description="Zhaohe 的文章和笔记。" locale={locale} path="/zh/blog">
+  <section class="container ben-page-hero ben-page-hero-compact">
+    <p class="ben-kicker">博客</p>
+    <h1>文章、笔记和时间线归档。</h1>
+    <p>这里是关于软件、市场、个人系统，以及长期线上基地的公开笔记。</p>
+  </section>
+
+  <section class="ben-section ben-section-last">
+    <div class="container">
+    <div class="weblog-tools">
+      <label>搜索文章<input type="search" placeholder="软件、投资、笔记..." data-blog-search /></label>
+      <a class="ben-action" href="/zh/blog?view=archive">归档视图</a>
+    </div>
+    <div class="tag-row" style="margin-bottom:1rem">
+      {tags.map((tag) => <a class="tag" href={`/zh/tags/${encodeURIComponent(tag)}`}>{tag}</a>)}
+    </div>
+    <EditablePostsList locale={locale} limit={20} />
+    <div class="ben-feature-list" data-blog-list>
+      {posts.map((post) => <BlogCard post={post} locale={locale} />)}
+    </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<script>
+  const search = document.querySelector("[data-blog-search]") as HTMLInputElement | null;
+  const cards = Array.from(document.querySelectorAll("[data-blog-list] article"));
+  search?.addEventListener("input", () => {
+    const query = search.value.trim().toLowerCase();
+    for (const card of cards) {
+      const text = card.textContent?.toLowerCase() || "";
+      (card as HTMLElement).hidden = query.length > 0 && !text.includes(query);
+    }
+  });
+</script>

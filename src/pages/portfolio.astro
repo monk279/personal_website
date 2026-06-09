@@ -1,0 +1,31 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import CommentSection from "@/components/CommentSection.astro";
+import PortfolioPublic from "@/components/PortfolioPublic.astro";
+---
+
+<BaseLayout title="Portfolio" description="Public investment allocation and percentage return snapshot." locale="en" path="/portfolio">
+  <section class="container ben-page-hero ben-page-hero-compact">
+    <p class="ben-kicker">Investment sharing</p>
+    <h1>Allocation, not account size.</h1>
+    <p>This page shares public percentages only: allocation, exposure, percentage returns, and quote freshness. Quantities, cost basis, and market value stay private.</p>
+  </section>
+
+  <section class="ben-section">
+    <div class="container">
+      <PortfolioPublic locale="en" />
+    </div>
+  </section>
+
+  <section class="ben-section ben-section-last">
+    <div class="container ben-notes">
+      <div>
+        <p class="ben-kicker">Notes</p>
+        <h2>Privacy boundary</h2>
+      </div>
+      <p>The public view is intentionally limited to percentages and freshness. It is a personal record, not investment advice.</p>
+    </div>
+  </section>
+
+  <CommentSection locale="en" slug="portfolio" targetType="portfolio" />
+</BaseLayout>

@@ -1,0 +1,22 @@
+---
+import { site, type Locale } from "@/config/site";
+
+type Props = {
+  locale: Locale;
+};
+
+const { locale } = Astro.props;
+---
+
+<footer class="site-footer">
+  <div class="container">
+    <p>© {new Date().getFullYear()} {site.name}</p>
+    <nav aria-label={locale === "zh" ? "页脚导航" : "Footer navigation"}>
+      <a href={locale === "zh" ? "/zh/blog" : "/blog"}>{locale === "zh" ? "博客" : "Blogs"}</a>
+      <a href={locale === "zh" ? "/zh/portfolio" : "/portfolio"}>{locale === "zh" ? "投资组合" : "Portfolio"}</a>
+      <a href={locale === "zh" ? "/zh/about" : "/about"}>{locale === "zh" ? "关于与联系" : "About & Contact"}</a>
+      <a href={`mailto:${site.email}`}>{site.email}</a>
+      <a href="/admin">{locale === "zh" ? "管理页面" : "Management"}</a>
+    </nav>
+  </div>
+</footer>

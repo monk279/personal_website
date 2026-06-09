@@ -1,0 +1,103 @@
+---
+import { labels } from "@/lib/i18n";
+import type { Locale } from "@/config/site";
+
+type Props = {
+  locale: Locale;
+  slug: string;
+  targetType?: "blog" | "portfolio";
+};
+
+const { locale, slug, targetType = "blog" } = Astro.props;
+const t = labels(locale);
+---
+
+<section class="section" data-comments data-slug={slug} data-target-type={targetType}>
+  <div class="container">
+    <div class="section-heading">
+      <h2>{t.comments}</h2>
+    </div>
+    <div class="grid" data-comment-list>
+      <p class="muted">{locale === "zh" ? "还没有公开评论。" : "No public comments yet."}</p>
+    </div>
+    <form class="card form-grid" data-comment-form>
+      <label>{locale === "zh" ? "名字" : "Name"}<input name="name" maxlength="80" required /></label>
+      <label>Email<input name="email" type="email" maxlength="160" /></label>
+      <label>{locale === "zh" ? "网站" : "Website"}<input name="website" maxlength="200" /></label>
+      <label>{locale === "zh" ? "评论" : "Comment"}<textarea name="body" maxlength="3000" required></textarea></label>
+      <label class="hp">Company<input name="company" tabindex="-1" autocomplete="off" /></label>
+      <p class="muted">{locale === "zh" ? "评论会先进入审核，通过后公开显示。" : "Comments go to moderation first and appear publicly after approval."}</p>
+      <button type="submit" data-submit-label={t.submit}>{t.submit}</button>
+      <p class="muted" data-comment-status></p>
+    </form>
+  </div>
+</section>
+
+<script>
+  const escapeCommentHtml = (value: unknown) => String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+  for (const root of document.querySelectorAll("[data-comments]")) {
+    const configuredSlug = root.getAttribute("data-slug") || "";
+    const slug = configuredSlug === "__query__" ? new URLSearchParams(location.search).get("slug") || "" : configuredSlug;
+    const targetType = root.getAttribute("data-target-type") || "blog";
+    const list = root.querySelector("[data-comment-list]");
+    const form = root.querySelector("[data-comment-form]") as HTMLFormElement | null;
+    const status = root.querySelector("[data-comment-status]");
+
+    const load = () => slug ? fetch(`/api/comments?targetType=${encodeURIComponent(targetType)}&targetSlug=${encodeURIComponent(slug)}`)
+      .then((response) => response.ok ? response.json() : Promise.reject())
+      .then((data) => {
+        if (!list || !data.comments?.length) return;
+        list.innerHTML = data.comments.map((comment: any) => `
+          <article class="card">
+            <div class="meta"><strong>${escapeCommentHtml(comment.authorName)}</strong><span>${new Date(comment.createdAt).toLocaleDateString()}</span></div>
+            <p>${escapeCommentHtml(comment.body)}</p>
+            ${comment.ownerReply ? `<p class="muted">Reply: ${escapeCommentHtml(comment.ownerReply)}</p>` : ""}
+          </article>
+        `).join("");
+      })
+      .catch(() => {}) : Promise.resolve();
+
+    load();
+    form?.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const submit = form.querySelector("button[type='submit']") as HTMLButtonElement | null;
+      if (submit) {
+        submit.disabled = true;
+        submit.textContent = "Submitting...";
+      }
+      if (status) status.textContent = "";
+      const data = Object.fromEntries(new FormData(form).entries());
+      if (!slug) {
+        if (status) status.textContent = "Missing post slug.";
+        if (submit) {
+          submit.disabled = false;
+          submit.textContent = submit.dataset.submitLabel || "Submit";
+        }
+        return;
+      }
+      try {
+        const response = await fetch("/api/comments", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ ...data, targetType, targetSlug: slug })
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(result.error || "Submission failed.");
+        if (status) status.textContent = document.documentElement.lang === "zh" ? "已提交，正在等待审核。" : "Thanks. Your comment is pending moderation.";
+        form.reset();
+      } catch (error) {
+        if (status) status.textContent = error instanceof Error ? error.message : "Submission failed.";
+      } finally {
+        if (submit) {
+          submit.disabled = false;
+          submit.textContent = submit.dataset.submitLabel || "Submit";
+        }
+      }
+    });
+  }
+</script>

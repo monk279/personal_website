@@ -1,0 +1,86 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import EditablePostsList from "@/components/EditablePostsList.astro";
+import PortfolioPublic from "@/components/PortfolioPublic.astro";
+import { site } from "@/config/site";
+import { getLatestPosts } from "@/lib/posts";
+import { formatDate } from "@/lib/format";
+
+const locale = "en";
+const posts = getLatestPosts(locale);
+---
+
+<BaseLayout title={site.name} description={site.profile.en.intro} locale={locale} path="/">
+  <section class="container ben-page-hero">
+    <h1>What matters in software, markets, and a durable life online?</h1>
+    <p>Stepping back from the noise, I write about building useful software, reading markets with patience, and keeping a long-term public notebook.</p>
+  </section>
+
+  <section class="ben-section">
+    <div class="container ben-section-grid">
+      <div class="ben-section-label">
+        <h2>Blogs</h2>
+        <p>Featured</p>
+      </div>
+      <div class="ben-feature-list">
+        <EditablePostsList locale={locale} limit={3} />
+        {posts.map((post) => (
+          <article class="ben-feature-item">
+            <time datetime={post.publishedAt}>{formatDate(post.publishedAt, locale)}</time>
+            <h3><a href={`/blog/${post.slug}`}>{post.title}</a></h3>
+            <p>{post.description}</p>
+          </article>
+        ))}
+        <p><a class="ben-action" href="/blog">Show more</a></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="ben-section">
+    <div class="container ben-promo-grid">
+      <article class="ben-promo">
+        <p class="ben-kicker">Portfolio</p>
+        <h2>Allocation, not account size.</h2>
+        <p>This page shares public percentages only: allocation, exposure, percentage returns, and quote freshness. Quantities, cost basis, and market value stay private.</p>
+        <p><a class="ben-action" href="/portfolio">View details</a></p>
+      </article>
+      <PortfolioPublic locale={locale} compact />
+    </div>
+  </section>
+
+  <section class="ben-section">
+    <div class="container ben-signup">
+      <div>
+        <p class="ben-kicker">Follow updates</p>
+        <h2>What changed, what did I learn, and what is worth keeping?</h2>
+        <p>Updates collect the latest Blogs, portfolio notes, and decisions worth revisiting.</p>
+      </div>
+      <form data-static-signup>
+        <label>Email Address<input type="email" autocomplete="email" /></label>
+        <button type="button" data-static-signup-button>Sign Up</button>
+        <p class="muted" data-static-signup-status></p>
+      </form>
+    </div>
+  </section>
+
+  <section class="ben-section ben-section-last">
+    <div class="container ben-notes">
+      <div>
+        <p class="ben-kicker">About & Contact</p>
+        <h2>A compact home base.</h2>
+      </div>
+      <p>{site.profile.en.about}</p>
+      <p>Read the <a href="/blog">Blogs archive</a>, review the <a href="/portfolio">public portfolio snapshot</a>, contact me at <a href={`mailto:${site.email}`}>{site.email}</a>, or open <a href="/admin">Management</a>.</p>
+    </div>
+  </section>
+</BaseLayout>
+
+<script>
+  for (const root of document.querySelectorAll("[data-static-signup]")) {
+    const button = root.querySelector("[data-static-signup-button]");
+    const status = root.querySelector("[data-static-signup-status]");
+    button?.addEventListener("click", () => {
+      if (status) status.textContent = "Thank you!";
+    });
+  }
+</script>

@@ -1,0 +1,39 @@
+---
+import { site, type Locale } from "@/config/site";
+import { alternatePath, labels, nav } from "@/lib/i18n";
+
+type Props = {
+  locale: Locale;
+  path: string;
+  showLanguage?: boolean;
+  adminMode?: boolean;
+};
+
+const { locale, path, showLanguage = true, adminMode = false } = Astro.props;
+const t = labels(locale);
+---
+
+<header class:list={["site-header", adminMode && "admin-header"]}>
+  <div class="container nav-row">
+    <a class="brand" href={adminMode ? "/admin" : locale === "zh" ? "/zh" : "/"}>
+      {adminMode && <img src="/assets/zhaohe-avatar.png" alt="" width="40" height="40" />}
+      <span data-profile-field={adminMode ? undefined : "displayName"}>{adminMode ? "Website Management" : site.name}</span>
+    </a>
+    {
+      adminMode ? (
+        <nav class="nav-links" aria-label="Management navigation">
+          <a href="/">View public site</a>
+          <a href="/blog">Public blog</a>
+          <a href="/portfolio">Public portfolio</a>
+        </nav>
+      ) : (
+        <nav class="nav-links" aria-label="Main navigation">
+          {nav(locale).map(([label, href]) => <a href={href}>{label}</a>)}
+        </nav>
+      )
+    }
+    <div class="header-actions">
+      {showLanguage && <a class="language-link" href={alternatePath(locale, path)}>{t.language}</a>}
+    </div>
+  </div>
+</header>

@@ -1,0 +1,24 @@
+- generic [active] [ref=e1] [box=0,0,390,2528]:
+  - generic [ref=e2] [box=0,0,390,2528]:
+    - banner [ref=e3] [box=0,0,390,149]:
+      - generic [ref=e4] [box=0,0,390,148]
+    - main [ref=e18] [box=0,149,390,2244]:
+      - generic [ref=e19] [box=0,149,390,700]
+      - generic [ref=e32] [box=0,898,390,528]
+      - generic [ref=e65] [box=20,1523,350,569]
+      - generic [ref=e75] [box=20,2206,350,139]
+    - contentinfo [ref=e82] [box=0,2393,390,135]:
+      - paragraph [ref=e84] [box=20,2442,350,38]: © 2026 Zhaohe. Built with Bun, Astro, Hono, and SQLite.
+  - generic [ref=e127] [box=109,827,173,40]:
+    - button "Menu" [ref=e128] [box=109,827,42,40]:
+      - img [ref=e130] [box=122,837,20,20]
+      - generic [box=105,746,54,27]: Menu
+    - button "Inspect" [ref=e134] [box=151,827,44,40]:
+      - img [ref=e136] [box=163,837,20,20]
+      - generic [box=140,746,66,27]: Inspect
+    - button "Audit" [ref=e138] [box=195,827,44,40]:
+      - generic [ref=e139] [box=207,837,20,20]
+      - generic [box=191,746,52,27]: Audit
+    - button "Settings" [ref=e146] [box=240,827,42,40]:
+      - img [ref=e148] [box=249,837,20,20]
+      - generic [box=223,746,71,27]: Settings

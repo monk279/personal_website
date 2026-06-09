@@ -1,0 +1,1744 @@
+---
+import AdminLayout from "@/layouts/AdminLayout.astro";
+---
+
+<AdminLayout title="Owner Studio" description="Owner management dashboard for zhaohe.me.">
+  <div class="studio-app docs-admin-app" data-admin-app data-admin-state="booting">
+    <section class="studio-login-screen" data-login-screen>
+      <div class="studio-login-card">
+        <div>
+          <p class="studio-kicker">Private management</p>
+          <h1>Owner Studio</h1>
+          <p class="studio-muted">Sign in to write posts, moderate comments, update market-priced portfolio data, and edit profile text.</p>
+        </div>
+
+        <div class="owner-diagnostics" aria-live="polite">
+          <p><span class="status-dot" data-api-dot></span><span data-api-status>Checking API...</span></p>
+          <p><span class="status-dot" data-owner-dot></span><span data-owner-status>Checking owner account...</span></p>
+        </div>
+
+        <div class="admin-runtime-note">
+          <strong>Editing requires the API and database.</strong>
+          <p>Static preview can show the public site, but posts and portfolio management need the local runtime.</p>
+          <code>bun run dev</code>
+          <span>Then open http://127.0.0.1:4321/admin.</span>
+          <button class="secondary" type="button" data-api-retry hidden>Retry now</button>
+        </div>
+
+        <form class="studio-login-form" data-login-form>
+          <label>Email<input name="email" type="email" autocomplete="username" required /></label>
+          <label>Password<input name="password" type="password" autocomplete="current-password" required /></label>
+          <p class="local-login-hint" data-owner-hint hidden>
+            Local dev owner: <strong data-owner-email></strong><br />
+            Password: <strong data-owner-password></strong>
+          </p>
+          <button type="submit">Log in</button>
+          <p class="studio-status" data-admin-status>Log in to manage the site.</p>
+        </form>
+      </div>
+    </section>
+
+    <section class="studio-shell docs-workspace-shell" data-studio-shell hidden>
+      <header class="studio-topbar">
+        <div>
+          <p class="studio-kicker">zhaohe.me</p>
+          <h1>Owner Studio</h1>
+        </div>
+        <div class="studio-topbar-actions">
+          <p class="studio-status" data-admin-status></p>
+          <p class="owner-pill" data-admin-name></p>
+          <a class="studio-button secondary" href="/" target="_blank" rel="noreferrer">Public site</a>
+          <button class="secondary" type="button" data-logout>Log out</button>
+        </div>
+      </header>
+
+      <div class="studio-grid">
+        <aside class="studio-sidebar">
+          <nav class="studio-nav" aria-label="Owner Studio navigation">
+            <button class="active" type="button" data-panel="content">Posts</button>
+            <button type="button" data-panel="comments">Comments <span data-pending-comments>0</span></button>
+            <button type="button" data-panel="portfolio">Portfolio</button>
+            <button type="button" data-panel="profile">Profile</button>
+          </nav>
+          <div class="studio-sidebar-note">
+            <strong>Reader accounts stay off.</strong>
+            <span>Comments go through spam checks and moderation before appearing publicly.</span>
+          </div>
+        </aside>
+
+        <main class="studio-main" data-admin-workspace>
+          <section class="studio-panel posts-panel" data-admin-panel="content">
+            <div class="studio-panel-heading">
+              <div>
+                <p class="studio-kicker">Document editor</p>
+                <h2>Posts</h2>
+                <p class="studio-muted">Write in a document canvas. Metadata and revisions live in Details.</p>
+              </div>
+              <div class="studio-actions doc-primary-actions">
+                <button class="secondary" type="button" data-toggle-library>Library</button>
+                <button type="button" data-new-post>New post</button>
+                <button class="secondary" type="submit" form="post-editor-form" data-save-status="draft">Save draft</button>
+                <button type="submit" form="post-editor-form" data-save-status="published">Publish</button>
+                <button class="secondary" type="button" data-toggle-meta>Details</button>
+                <button class="secondary" type="button" data-refresh="content">Refresh</button>
+              </div>
+            </div>
+
+            <div class="posts-workspace">
+              <aside class="post-library" data-post-library>
+                <div class="post-library-heading">
+                  <h3>All posts</h3>
+                  <button class="secondary post-library-close" type="button" data-toggle-library>Close</button>
+                  <span class="studio-tag" data-content-count>0</span>
+                </div>
+                <label class="compact-field">Search
+                  <input data-post-search placeholder="Title, slug, tag" />
+                </label>
+                <div class="post-list" data-content-admin></div>
+              </aside>
+
+              <form id="post-editor-form" class="post-editor-grid" data-content-form>
+                <input name="id" type="hidden" />
+                <textarea name="bodyMarkdown" data-markdown-source hidden></textarea>
+
+                <section class="post-writing-surface">
+                  <div class="document-status-row">
+                    <span class="studio-tag" data-editor-status>draft</span>
+                    <span class="editor-save-indicator" data-editor-save-state>Ready</span>
+                  </div>
+                  <div class="post-title-row">
+                    <input class="post-title-input" name="title" placeholder="Untitled post" maxlength="160" required />
+                  </div>
+                  <textarea class="post-description-input" name="description" maxlength="300" placeholder="Short description for listings and search." required></textarea>
+
+                  <div class="docs-editor-chrome" data-doc-toolbar>
+                    <div class="editor-command-bar docs-command-bar" aria-label="Document toolbar">
+                      <div class="toolbar-group history-tools" aria-label="History">
+                        <button class="secondary compact-tool" type="button" data-doc-action="undo" title="Undo">Undo</button>
+                        <button class="secondary compact-tool" type="button" data-doc-action="redo" title="Redo">Redo</button>
+                      </div>
+
+                      <label class="toolbar-select-label">Style
+                        <select data-doc-block-style aria-label="Text style">
+                          <option value="paragraph">Paragraph</option>
+                          <option value="h1">Heading 1</option>
+                          <option value="h2">Heading 2</option>
+                          <option value="h3">Heading 3</option>
+                          <option value="quote">Quote</option>
+                          <option value="code">Code block</option>
+                        </select>
+                      </label>
+
+                      <div class="toolbar-group" aria-label="Inline formatting">
+                        <button class="secondary mark-tool" type="button" data-doc-mark="bold" title="Bold">B</button>
+                        <button class="secondary mark-tool italic" type="button" data-doc-mark="italic" title="Italic">I</button>
+                        <button class="secondary mark-tool underline" type="button" data-doc-mark="underline" title="Underline">U</button>
+                        <button class="secondary mark-tool strike" type="button" data-doc-command="strike" title="Strikethrough">S</button>
+                        <button class="secondary mark-tool code" type="button" data-doc-mark="code" title="Inline code">Code</button>
+                        <button class="secondary mark-tool" type="button" data-doc-command="highlight" title="Highlight">Mark</button>
+                      </div>
+
+                      <div class="toolbar-group" aria-label="Lists and alignment">
+                        <button class="secondary compact-tool" type="button" data-doc-command="ul" title="Bullet list">Bullets</button>
+                        <button class="secondary compact-tool" type="button" data-doc-command="ol" title="Numbered list">Numbers</button>
+                        <button class="secondary compact-tool" type="button" data-doc-command="task" title="Task list">Tasks</button>
+                        <button class="secondary compact-tool" type="button" data-doc-align="left" title="Align left">Left</button>
+                        <button class="secondary compact-tool" type="button" data-doc-align="center" title="Align center">Center</button>
+                        <button class="secondary compact-tool" type="button" data-doc-align="right" title="Align right">Right</button>
+                      </div>
+
+                      <details class="docs-menu">
+                        <summary>Insert</summary>
+                        <div class="docs-menu-panel">
+                          <button type="button" data-md-link>Link</button>
+                          <button type="button" data-doc-command="hr">Divider</button>
+                          <button type="button" data-doc-command="table">Table</button>
+                          <button type="button" data-md-emoji>Emoji</button>
+                          <button type="button" data-doc-command="clear">Clear formatting</button>
+                          <label class="menu-upload">Image
+                            <input name="asset" type="file" accept="image/png,image/jpeg,image/gif,image/webp" data-asset-upload />
+                          </label>
+                        </div>
+                      </details>
+
+                      <div class="toolbar-spacer"></div>
+                      <div class="docs-editor-stats" aria-live="polite">
+                        <span data-editor-word-count>0 words</span>
+                        <span data-editor-character-count>0 chars</span>
+                      </div>
+                      <span class="editor-upload-status" data-upload-status></span>
+                    </div>
+
+                    <div class="editor-mode-bar docs-mode-bar">
+                    <div class="segmented-control" role="group" aria-label="Editor view">
+                      <button class="active" type="button" data-editor-view="edit">Edit</button>
+                      <button type="button" data-editor-view="split">Split</button>
+                      <button type="button" data-editor-view="preview">Preview</button>
+                    </div>
+                    <button class="secondary" type="button" data-toggle-meta>Details</button>
+                    </div>
+                  </div>
+
+	                  <div class="editor-stage" data-editor-stage data-mode="edit">
+                    <div class="bubble-toolbar" data-bubble-toolbar hidden>
+                      <button type="button" data-doc-mark="bold">Bold</button>
+                      <button type="button" data-doc-mark="italic">Italic</button>
+                      <button type="button" data-doc-mark="underline">Underline</button>
+                      <button type="button" data-doc-mark="code">Code</button>
+                      <button type="button" data-md-link>Link</button>
+                    </div>
+	                    <div class="editor-pane" data-editor-edit-pane>
+	                      <div class="doc-editor-host" data-doc-editor role="textbox" aria-multiline="true"></div>
+	                    </div>
+                    <section class="editor-preview" data-editor-preview-pane aria-label="Post preview">
+                      <div class="prose" data-editor-preview><p class="studio-muted">Preview appears here.</p></div>
+                    </section>
+                  </div>
+                </section>
+
+                <aside class="publish-sidebar" data-meta-drawer aria-label="Post details">
+                  <div class="publish-card primary">
+                    <div>
+                      <p class="studio-kicker">Post details</p>
+                      <h3 data-editor-title>New post</h3>
+                    </div>
+                    <div class="publish-actions">
+                      <button class="secondary" type="button" data-close-meta>Close</button>
+                      <button type="submit" data-save-status="draft">Save draft</button>
+                      <button type="submit" data-save-status="published">Publish</button>
+                      <a class="studio-button secondary" data-content-open href="/blog" target="_blank" rel="noreferrer">Open public page</a>
+                    </div>
+                  </div>
+
+                  <div class="publish-card">
+                    <h3>Metadata</h3>
+                    <div class="compact-form">
+                      <label>Slug<input name="slug" required maxlength="120" pattern="[a-z0-9]+(-[a-z0-9]+)*" /></label>
+                      <label>Language
+                        <select name="lang">
+                          <option value="en">English</option>
+                          <option value="zh">Chinese</option>
+                        </select>
+                      </label>
+                      <label>Status
+                        <select name="status">
+                          <option value="draft">draft</option>
+                          <option value="published">published</option>
+                          <option value="archived">archived</option>
+                        </select>
+                      </label>
+                      <label>Category<input name="category" value="Notes" required maxlength="80" /></label>
+                      <label>Tags<input name="tags" placeholder="writing, investing, notes" /></label>
+                      <label>Published at<input name="publishedAt" type="datetime-local" /></label>
+                    </div>
+                  </div>
+
+                  <div class="publish-card revision-panel">
+                    <div class="post-library-heading">
+                      <h3>Revision history</h3>
+                      <span class="studio-tag" data-current-version>v1</span>
+                    </div>
+                    <div class="post-list" data-revisions-admin><p class="studio-muted">Save the post to start revision history.</p></div>
+                  </div>
+                </aside>
+              </form>
+            </div>
+          </section>
+
+          <section class="studio-panel" data-admin-panel="comments" hidden>
+            <div class="studio-panel-heading">
+              <div>
+                <p class="studio-kicker">Inbox</p>
+                <h2>Comments</h2>
+              </div>
+              <button class="secondary" type="button" data-refresh="comments">Refresh</button>
+            </div>
+            <div data-comments-admin></div>
+          </section>
+
+          <section class="studio-panel" data-admin-panel="portfolio" hidden>
+            <div class="studio-panel-heading">
+              <div>
+                <p class="studio-kicker">Investment sheet</p>
+                <h2>Portfolio</h2>
+                <p class="studio-muted">Edit holdings in the sheet or use the add/edit drawer below.</p>
+              </div>
+              <div class="studio-actions">
+                <button class="secondary" type="button" data-refresh="portfolio">Refresh</button>
+                <button type="button" data-refresh-quotes>Refresh quotes</button>
+              </div>
+            </div>
+            <form class="studio-form-grid portfolio-edit-drawer" data-position-form>
+              <input name="id" type="hidden" />
+              <input name="assetId" type="hidden" />
+              <input name="provider" type="hidden" value="alpha_vantage" />
+              <input name="exchange" type="hidden" />
+              <input name="asOf" type="hidden" />
+              <input name="costBasisCents" type="hidden" />
+              <label>Search stocks or ETFs / 搜索股票或 ETF
+                <input data-market-search role="combobox" aria-controls="market-search-results" aria-expanded="false" placeholder="VT, Apple, 苹果, 全球股票..." autocomplete="off" />
+              </label>
+              <p class="studio-status" data-market-status>Search provider and cached assets are ready.</p>
+              <div class="post-list market-search-results" id="market-search-results" data-market-results hidden></div>
+              <div class="studio-grid-two">
+                <label>Ticker<input name="ticker" required /></label>
+                <label>Name<input name="name" required /></label>
+                <label>Asset class<input name="assetClass" required /></label>
+                <label>Region<input name="region" required /></label>
+                <label>Currency<input name="currency" value="USD" required /></label>
+                <label>Aliases / 中文别名<input name="aliases" placeholder="Apple, 苹果, AAPL" /></label>
+                <label>Quantity<input name="quantity" type="number" min="0" step="0.0001" required /></label>
+                <label>Average cost price
+                  <input name="costPrice" type="number" min="0" step="0.0001" inputmode="decimal" required />
+                  <span class="field-help">Your average buy price per share/unit. Total cost and P/L are calculated from this.</span>
+                </label>
+                <label>Status
+                  <select name="status">
+                    <option value="active">active</option>
+                    <option value="watchlist">watchlist</option>
+                    <option value="closed">closed</option>
+                  </select>
+                </label>
+              </div>
+              <p class="portfolio-derived-note" data-cost-basis-preview>Total cost basis will be calculated from quantity and average cost price.</p>
+              <label>Notes<textarea name="notes"></textarea></label>
+              <div class="studio-actions">
+                <button type="submit" data-position-submit>Add position</button>
+                <button class="secondary" type="button" data-position-cancel hidden>Cancel edit</button>
+              </div>
+            </form>
+            <section class="portfolio-sheet" data-portfolio-admin></section>
+          </section>
+
+          <section class="studio-panel" data-admin-panel="profile" hidden>
+            <div class="studio-panel-heading">
+              <div>
+                <p class="studio-kicker">Settings document</p>
+                <h2>Profile</h2>
+              </div>
+              <button class="secondary" type="button" data-refresh="profile">Refresh</button>
+            </div>
+            <form class="studio-form-grid" data-profile-form>
+              <label>Display name<input name="displayName" required /></label>
+              <label>Headline<input name="headline" required /></label>
+              <label>English bio<textarea name="bioEn" required></textarea></label>
+              <label>Chinese bio<textarea name="bioZh" required></textarea></label>
+              <div class="studio-grid-two">
+                <label>Location<input name="location" /></label>
+                <label>Email<input name="email" type="email" /></label>
+              </div>
+              <button type="submit">Save profile</button>
+            </form>
+          </section>
+        </main>
+      </div>
+    </section>
+
+    <dialog class="studio-dialog" data-link-dialog>
+      <form method="dialog" data-link-dialog-form>
+        <h2>Insert link</h2>
+        <label>Text<input name="text" required /></label>
+        <label>URL<input name="url" type="url" placeholder="https://example.com" required /></label>
+        <div class="studio-actions">
+          <button type="submit">Insert</button>
+          <button class="secondary" value="cancel" type="button" data-link-cancel>Cancel</button>
+        </div>
+      </form>
+    </dialog>
+
+    <div class="emoji-popover" data-emoji-picker hidden>
+      {["😀", "✨", "📌", "💡", "📈", "✅", "🔥", "🙏", "🧠", "📝", "🚀", "❤️"].map((emoji) => (
+        <button type="button" data-emoji-value={emoji}>{emoji}</button>
+      ))}
+    </div>
+  </div>
+</AdminLayout>
+
+<script>
+  import { createDocsEditor, type DocsEditorFormatState, type DocsEditorHandle } from "@/scripts/admin/editor";
+
+  const adminApp = document.querySelector("[data-admin-app]") as HTMLElement | null;
+  const statusEls = document.querySelectorAll("[data-admin-status]");
+  const apiStatus = document.querySelector("[data-api-status]");
+  const ownerStatus = document.querySelector("[data-owner-status]");
+  const apiDot = document.querySelector("[data-api-dot]");
+  const ownerDot = document.querySelector("[data-owner-dot]");
+  const ownerHint = document.querySelector("[data-owner-hint]") as HTMLElement | null;
+  const ownerEmailHint = document.querySelector("[data-owner-email]");
+  const ownerPasswordHint = document.querySelector("[data-owner-password]");
+  const loginScreen = document.querySelector("[data-login-screen]") as HTMLElement | null;
+  const loginForm = document.querySelector("[data-login-form]") as HTMLFormElement | null;
+  const apiRetryButton = document.querySelector("[data-api-retry]") as HTMLButtonElement | null;
+  const studioShell = document.querySelector("[data-studio-shell]") as HTMLElement | null;
+  const adminName = document.querySelector("[data-admin-name]");
+  const contentForm = document.querySelector("[data-content-form]") as HTMLFormElement | null;
+  const markdownSource = document.querySelector("[data-markdown-source]") as HTMLTextAreaElement | null;
+  const editorHost = document.querySelector("[data-doc-editor]") as HTMLElement | null;
+  const editorStage = document.querySelector("[data-editor-stage]") as HTMLElement | null;
+  const editorPreview = document.querySelector("[data-editor-preview]") as HTMLElement | null;
+  const editorSaveState = document.querySelector("[data-editor-save-state]") as HTMLElement | null;
+  const editorBubbleToolbar = document.querySelector("[data-bubble-toolbar]") as HTMLElement | null;
+  const editorBlockStyle = document.querySelector("[data-doc-block-style]") as HTMLSelectElement | null;
+  const editorWordCount = document.querySelector("[data-editor-word-count]") as HTMLElement | null;
+  const editorCharacterCount = document.querySelector("[data-editor-character-count]") as HTMLElement | null;
+  const emojiPicker = document.querySelector("[data-emoji-picker]") as HTMLElement | null;
+  const linkDialog = document.querySelector("[data-link-dialog]") as HTMLDialogElement | null;
+  const linkDialogForm = document.querySelector("[data-link-dialog-form]") as HTMLFormElement | null;
+  const uploadStatus = document.querySelector("[data-upload-status]") as HTMLElement | null;
+  const marketStatus = document.querySelector("[data-market-status]") as HTMLElement | null;
+  const marketSearchInput = document.querySelector("[data-market-search]") as HTMLInputElement | null;
+  let csrfToken = "";
+  let contentPosts: any[] = [];
+  let portfolioPositions: any[] = [];
+  let suppressEditorDirty = false;
+  let previewTimer: number | undefined;
+  let previewRequestId = 0;
+  let marketSearchTimer: number | undefined;
+  let draftAutosaveTimer: number | undefined;
+  let draftAutosaveRequestId = 0;
+  let docsEditor: DocsEditorHandle | null = null;
+  let ownerStatusRetryTimer: number | undefined;
+  let ownerStatusStartedAt = 0;
+  let ownerStatusRequestId = 0;
+  let retryMeAfterApiOnline = false;
+
+  class AdminApiError extends Error {
+    status: number;
+    code: string;
+
+    constructor(message: string, status = 0, code = "API_ERROR") {
+      super(message);
+      this.status = status;
+      this.code = code;
+    }
+  }
+
+  const backendUnavailableMessage = "API backend is not running. Run bun run dev, then open http://127.0.0.1:4321/admin.";
+  const apiCheckingMessage = "Checking local API...";
+  const directLocalApiOrigin = ["127.0.0.1", "localhost"].includes(window.location.hostname)
+    ? "http://127.0.0.1:3000"
+    : "";
+
+  type AdminState = "booting" | "offline" | "login" | "workspace";
+
+  function setAdminState(state: AdminState) {
+    adminApp?.setAttribute("data-admin-state", state);
+    if (loginScreen) loginScreen.hidden = state === "workspace";
+    if (studioShell) studioShell.hidden = state !== "workspace";
+  }
+
+  function isWorkspaceState() {
+    return adminApp?.getAttribute("data-admin-state") === "workspace";
+  }
+
+  function setWorkspaceDrawer(name: "meta" | "library", open: boolean) {
+    const attr = name === "meta" ? "data-meta-open" : "data-library-open";
+    adminApp?.toggleAttribute(attr, open);
+    if (name === "meta") {
+      const drawer = document.querySelector("[data-meta-drawer]") as HTMLElement | null;
+      drawer?.style.setProperty("transform", "none", "important");
+      if (open) drawer?.style.setProperty("right", "0", "important");
+      else drawer?.style.removeProperty("right");
+    }
+  }
+
+  const escapeHtml = (value: unknown) => String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+
+  const setStatus = (message: string) => {
+    for (const statusEl of statusEls) statusEl.textContent = message;
+  };
+
+  function setLoginDisabled(disabled: boolean) {
+    if (!loginForm) return;
+    loginScreen?.toggleAttribute("data-api-offline", disabled);
+    if (!isWorkspaceState()) setAdminState(disabled ? "offline" : "login");
+    loginForm.hidden = disabled;
+    if (apiRetryButton) {
+      apiRetryButton.hidden = !disabled;
+      apiRetryButton.disabled = false;
+    }
+    loginForm.toggleAttribute("data-disabled", disabled);
+    loginForm.setAttribute("aria-disabled", String(disabled));
+    for (const element of Array.from(loginForm.elements)) {
+      if (element instanceof HTMLInputElement || element instanceof HTMLButtonElement) element.disabled = disabled;
+    }
+  }
+
+  function setSaveState(message: string, state = "idle") {
+    if (!editorSaveState) return;
+    editorSaveState.textContent = message;
+    editorSaveState.setAttribute("data-state", state);
+  }
+
+  function setButtonState(selector: string, active: boolean, disabled = false) {
+    for (const button of document.querySelectorAll(selector)) {
+      button.classList.toggle("active", active);
+      if (button instanceof HTMLButtonElement) button.disabled = disabled;
+    }
+  }
+
+  function hideEditorBubble() {
+    if (!editorBubbleToolbar) return;
+    editorBubbleToolbar.hidden = true;
+  }
+
+  function updateEditorBubble(state: DocsEditorFormatState) {
+    if (!editorBubbleToolbar || !editorHost || !state.selectionText) {
+      hideEditorBubble();
+      return;
+    }
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0 || selection.isCollapsed || !editorHost.contains(selection.anchorNode)) {
+      hideEditorBubble();
+      return;
+    }
+    const rect = selection.getRangeAt(0).getBoundingClientRect();
+    if (!rect.width && !rect.height) {
+      hideEditorBubble();
+      return;
+    }
+    const toolbarWidth = editorBubbleToolbar.offsetWidth || 320;
+    editorBubbleToolbar.style.left = `${Math.max(12, Math.min(rect.left + rect.width / 2 - toolbarWidth / 2, window.innerWidth - toolbarWidth - 12))}px`;
+    editorBubbleToolbar.style.top = `${Math.max(72, rect.top - 48)}px`;
+    editorBubbleToolbar.hidden = false;
+  }
+
+  function updateEditorChrome(state = docsEditor?.getFormatState()) {
+    if (!state) return;
+    if (editorBlockStyle && editorBlockStyle.value !== state.block) editorBlockStyle.value = state.block;
+    if (editorWordCount) editorWordCount.textContent = `${state.words} ${state.words === 1 ? "word" : "words"}`;
+    if (editorCharacterCount) editorCharacterCount.textContent = `${state.characters} chars`;
+    setButtonState("[data-doc-action='undo']", false, !state.canUndo);
+    setButtonState("[data-doc-action='redo']", false, !state.canRedo);
+    setButtonState("[data-doc-mark='bold']", state.bold);
+    setButtonState("[data-doc-mark='italic']", state.italic);
+    setButtonState("[data-doc-mark='underline']", state.underline);
+    setButtonState("[data-doc-mark='code']", state.code);
+    setButtonState("[data-doc-command='strike']", state.strike);
+    setButtonState("[data-doc-command='highlight']", state.highlight);
+    setButtonState("[data-doc-command='ul']", state.bulletList);
+    setButtonState("[data-doc-command='ol']", state.orderedList);
+    setButtonState("[data-doc-command='task']", state.taskList);
+    setButtonState("[data-doc-command='quote']", state.blockquote);
+    setButtonState("[data-doc-command='code']", state.codeBlock);
+    for (const button of document.querySelectorAll("[data-doc-align]")) {
+      button.classList.toggle("active", button.getAttribute("data-doc-align") === state.align);
+    }
+    updateEditorBubble(state);
+  }
+
+  function directLocalApiUrl(path: string) {
+    return directLocalApiOrigin && path.startsWith("/api/") ? `${directLocalApiOrigin}${path}` : "";
+  }
+
+  function canRetryDirectly(error: AdminApiError, path: string) {
+    return Boolean(directLocalApiUrl(path)) && error.code === "API_UNAVAILABLE";
+  }
+
+  async function requestApi(path: string, options: RequestInit = {}, direct = false) {
+    const headers = new Headers(options.headers || {});
+    if (options.body && !(options.body instanceof FormData) && !headers.has("content-type")) headers.set("content-type", "application/json");
+    if (csrfToken && options.method && options.method !== "GET") headers.set("x-csrf-token", csrfToken);
+    let response: Response;
+    const url = direct ? directLocalApiUrl(path) : path;
+    try {
+      response = await fetch(url, { ...options, credentials: "include", headers });
+    } catch {
+      throw new AdminApiError("API is unavailable. Check that the local API server is running.", 0, "API_UNAVAILABLE");
+    }
+    const text = await response.text();
+    const contentType = response.headers.get("content-type") || "";
+    let data: any = {};
+    try {
+      data = text ? JSON.parse(text) : {};
+    } catch {
+      if (contentType.includes("text/html") || text.trimStart().startsWith("<!DOCTYPE") || text.trimStart().startsWith("<html")) {
+        throw new AdminApiError(backendUnavailableMessage, response.status, "API_UNAVAILABLE");
+      }
+      data = { error: response.statusText || backendUnavailableMessage };
+    }
+    if (!response.ok) throw new AdminApiError(data.error || response.statusText, response.status, data.code || "API_ERROR");
+    return data;
+  }
+
+  async function api(path: string, options: RequestInit = {}) {
+    try {
+      return await requestApi(path, options);
+    } catch (error) {
+      if (error instanceof AdminApiError && canRetryDirectly(error, path)) return requestApi(path, options, true);
+      throw error;
+    }
+  }
+
+  function setDot(target: Element | null, state: "ok" | "warn" | "bad") {
+    target?.setAttribute("data-state", state);
+  }
+
+  function shouldShowOfflineDetails(manual = false) {
+    return manual || Date.now() - ownerStatusStartedAt >= 15_000;
+  }
+
+  async function loadOwnerStatus(showOfflineDetails = false) {
+    const requestId = ++ownerStatusRequestId;
+    try {
+      const data = await api("/api/admin/owner-status");
+      if (requestId !== ownerStatusRequestId) return false;
+      window.clearTimeout(ownerStatusRetryTimer);
+      setLoginDisabled(false);
+      if (apiStatus) apiStatus.textContent = "API online";
+      setDot(apiDot, "ok");
+      if (ownerStatus) ownerStatus.textContent = data.message || "Owner account checked.";
+      setDot(ownerDot, data.hasOwner ? "ok" : "warn");
+      const emailInput = loginForm?.elements.namedItem("email") as HTMLInputElement | null;
+      if (data.local && data.email && data.passwordHint) {
+        if (ownerEmailHint) ownerEmailHint.textContent = data.email;
+        if (ownerPasswordHint) ownerPasswordHint.textContent = data.passwordHint;
+        if (ownerHint) ownerHint.hidden = false;
+      if (emailInput && !emailInput.value) emailInput.value = data.email;
+      } else if (ownerHint) {
+        ownerHint.hidden = true;
+      }
+      return true;
+    } catch (error) {
+      if (requestId !== ownerStatusRequestId) return false;
+      setLoginDisabled(true);
+      if (apiStatus) apiStatus.textContent = showOfflineDetails && error instanceof Error ? error.message : apiCheckingMessage;
+      if (ownerStatus) ownerStatus.textContent = showOfflineDetails ? "Retrying automatically." : "Waiting for the local API proxy.";
+      setDot(apiDot, "bad");
+      setDot(ownerDot, "bad");
+      if (ownerHint) ownerHint.hidden = true;
+      return false;
+    }
+  }
+
+  function scheduleOwnerStatusRetry() {
+    window.clearTimeout(ownerStatusRetryTimer);
+    const elapsed = Date.now() - ownerStatusStartedAt;
+    const delay = elapsed < 15_000 ? 1_000 : 5_000;
+    ownerStatusRetryTimer = window.setTimeout(() => {
+      checkOwnerStatusWithRetry();
+    }, delay);
+  }
+
+  async function checkOwnerStatusWithRetry(manual = false) {
+    if (apiRetryButton) apiRetryButton.disabled = true;
+    if (apiStatus) apiStatus.textContent = manual ? "Retrying local API..." : apiCheckingMessage;
+    setDot(apiDot, "warn");
+    const ok = await loadOwnerStatus(shouldShowOfflineDetails(manual));
+    if (ok && retryMeAfterApiOnline) {
+      retryMeAfterApiOnline = false;
+      await loadMe();
+    }
+    if (!ok) {
+      if (apiRetryButton) apiRetryButton.disabled = false;
+      scheduleOwnerStatusRetry();
+    }
+  }
+
+  function startOwnerStatusChecks() {
+    ownerStatusStartedAt = Date.now();
+    checkOwnerStatusWithRetry();
+  }
+
+  function updatePendingBadges(pending?: { comments?: number }) {
+    const comments = document.querySelector("[data-pending-comments]");
+    if (comments) comments.textContent = String(pending?.comments ?? 0);
+  }
+
+  async function refreshPendingBadges() {
+    const data = await api("/api/admin/me");
+    updatePendingBadges(data.pending);
+  }
+
+  function setLoggedIn(admin: any) {
+    setAdminState("workspace");
+    setWorkspaceDrawer("meta", false);
+    setWorkspaceDrawer("library", false);
+    if (adminName) adminName.textContent = `${admin.name} <${admin.email}>`;
+    showPanel("content");
+    setupEditor();
+  }
+
+  function setLoggedOut(message = "Log in to manage the site.") {
+    setAdminState("login");
+    setWorkspaceDrawer("meta", false);
+    setWorkspaceDrawer("library", false);
+    setStatus(message);
+  }
+
+  function showPanel(name: string) {
+    adminApp?.setAttribute("data-active-panel", name);
+    if (name !== "content") {
+      setWorkspaceDrawer("meta", false);
+      setWorkspaceDrawer("library", false);
+    }
+    for (const panel of document.querySelectorAll("[data-admin-panel]")) {
+      (panel as HTMLElement).hidden = panel.getAttribute("data-admin-panel") !== name;
+    }
+    for (const button of document.querySelectorAll("[data-panel]")) {
+      button.classList.toggle("active", button.getAttribute("data-panel") === name);
+    }
+  }
+
+  function slugify(value: string) {
+    return value
+      .toLowerCase()
+      .normalize("NFKD")
+      .replace(/[^\w\s-]/g, "")
+      .trim()
+      .replace(/[\s_]+/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "") || "untitled";
+  }
+
+  function setupEditor() {
+    if (!editorHost || docsEditor) return;
+    docsEditor = createDocsEditor({
+      element: editorHost,
+      initialMarkdown: markdownSource?.value ?? "",
+      placeholder: "Start writing. Type / for blocks.",
+      onUpdate: (markdown) => {
+        syncMarkdownSource(markdown);
+        if (!suppressEditorDirty) {
+          setSaveState("Unsaved changes", "dirty");
+          scheduleEditorPreview();
+          scheduleDraftAutosave();
+        }
+      },
+      onSelectionUpdate: updateEditorChrome,
+      onRequestLink: openLinkDialog,
+      onRequestImage: () => (document.querySelector("[data-asset-upload]") as HTMLInputElement | null)?.click()
+    });
+    editorHost.addEventListener("keydown", (event) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "s") {
+        event.preventDefault();
+        contentForm?.requestSubmit(contentForm.querySelector("[data-save-status='draft']") as HTMLButtonElement | null);
+      }
+    });
+    editorHost.addEventListener("mouseup", () => window.setTimeout(() => updateEditorChrome(), 0));
+    editorHost.addEventListener("keyup", () => updateEditorChrome());
+    updateEditorChrome();
+  }
+
+  function getEditorMarkdown() {
+    setupEditor();
+    return docsEditor?.getMarkdown() ?? markdownSource?.value ?? "";
+  }
+
+  function syncMarkdownSource(value = getEditorMarkdown()) {
+    if (markdownSource) markdownSource.value = value;
+  }
+
+  function setEditorMarkdown(value: string) {
+    setupEditor();
+    suppressEditorDirty = true;
+    docsEditor?.setMarkdown(value);
+    syncMarkdownSource(value);
+    suppressEditorDirty = false;
+    setSaveState("Ready", "idle");
+    scheduleEditorPreview(0);
+    updateEditorChrome();
+  }
+
+  function setEditorMode(mode: string) {
+    if (editorStage) editorStage.setAttribute("data-mode", mode);
+    for (const button of document.querySelectorAll("[data-editor-view]")) {
+      button.classList.toggle("active", button.getAttribute("data-editor-view") === mode);
+    }
+    if (mode !== "edit") scheduleEditorPreview(0);
+  }
+
+  function renderClientPreviewFallback(markdown: string) {
+    return escapeHtml(markdown)
+      .replace(/^### (.*)$/gm, "<h3>$1</h3>")
+      .replace(/^## (.*)$/gm, "<h2>$1</h2>")
+      .replace(/^# (.*)$/gm, "<h1>$1</h1>")
+      .replace(/!\[([^\]]*)\]\((https?:\/\/[^)\s]+|\/[^)\s]+)\)/g, '<img src="$2" alt="$1" />')
+      .replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+|\/[^)\s]+|mailto:[^)\s]+)\)/g, '<a href="$2">$1</a>')
+      .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+      .replace(/\*([^*]+)\*/g, "<em>$1</em>")
+      .replace(/^&gt; (.*)$/gm, "<blockquote>$1</blockquote>")
+      .replace(/```([\s\S]*?)```/g, "<pre><code>$1</code></pre>")
+      .replace(/^- (.*)$/gm, "<ul><li>$1</li></ul>")
+      .replace(/\n{2,}/g, "</p><p>")
+      .replace(/^(?!<h|<p|<blockquote|<img|<ul|<pre)(.+)$/gm, "<p>$1</p>");
+  }
+
+  async function renderEditorPreviewNow() {
+    if (!editorPreview) return;
+    const markdown = getEditorMarkdown();
+    if (!markdown.trim()) {
+      editorPreview.innerHTML = "<p class='studio-muted'>Preview appears here.</p>";
+      return;
+    }
+    const requestId = ++previewRequestId;
+    try {
+      const data = await api("/api/admin/content/preview", { method: "POST", body: JSON.stringify({ bodyMarkdown: markdown }) });
+      if (requestId === previewRequestId) editorPreview.innerHTML = data.html || "";
+    } catch {
+      if (requestId === previewRequestId) editorPreview.innerHTML = renderClientPreviewFallback(markdown);
+    }
+  }
+
+  function scheduleEditorPreview(delay = 250) {
+    window.clearTimeout(previewTimer);
+    previewTimer = window.setTimeout(() => {
+      renderEditorPreviewNow();
+    }, delay);
+  }
+
+  function replaceEditorSelection(before: string, after = "", placeholder = "") {
+    setupEditor();
+    docsEditor?.insertMarkdown(`${before}${selectedEditorText() || placeholder}${after}`);
+    syncMarkdownSource();
+    scheduleEditorPreview();
+    updateEditorChrome();
+  }
+
+  function selectedEditorText() {
+    setupEditor();
+    return docsEditor?.getSelectedText() || "";
+  }
+
+  function applyDocCommand(command: string) {
+    setupEditor();
+    docsEditor?.runCommand(command);
+    syncMarkdownSource();
+    scheduleEditorPreview();
+    updateEditorChrome();
+  }
+
+  function insertEditorImage(src: string, alt = "") {
+    setupEditor();
+    docsEditor?.insertImage(src, alt);
+    syncMarkdownSource();
+    scheduleEditorPreview();
+    updateEditorChrome();
+  }
+
+  function publicPostHref(post: any) {
+    return post.lang === "zh"
+      ? `/zh/blog/${encodeURIComponent(post.slug)}`
+      : `/blog/${encodeURIComponent(post.slug)}`;
+  }
+
+  function todayDateInputValue() {
+    const now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    return now.toISOString().slice(0, 10);
+  }
+
+  function formatMoney(value: unknown, currency = "USD") {
+    const amount = Number(value);
+    if (!Number.isFinite(amount)) return "—";
+    try {
+      return new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: String(currency || "USD").toUpperCase(),
+        maximumFractionDigits: Math.abs(amount) >= 1000 ? 0 : 2
+      }).format(amount);
+    } catch {
+      return `${String(currency || "USD").toUpperCase()} ${amount.toFixed(2)}`;
+    }
+  }
+
+  function formatPercent(value: unknown) {
+    const amount = Number(value);
+    if (!Number.isFinite(amount)) return "—";
+    return `${amount >= 0 ? "+" : ""}${amount.toFixed(2)}%`;
+  }
+
+  function costPriceInputFromPosition(position?: any) {
+    const quantity = Number(position?.quantity);
+    const cents = Number(position?.costBasisCents);
+    if (!Number.isFinite(quantity) || quantity <= 0 || !Number.isFinite(cents) || cents <= 0) return "";
+    return (cents / 100 / quantity).toFixed(4).replace(/\.?0+$/, "");
+  }
+
+  function costBasisCentsFromInputs(quantity: unknown, costPrice: unknown) {
+    const quantityValue = Number(quantity);
+    const costPriceValue = Number(costPrice);
+    if (!Number.isFinite(quantityValue) || quantityValue <= 0 || !Number.isFinite(costPriceValue) || costPriceValue < 0) return 0;
+    return Math.round(quantityValue * costPriceValue * 100);
+  }
+
+  function updateCostBasisPreview() {
+    const form = document.querySelector("[data-position-form]") as HTMLFormElement | null;
+    const target = document.querySelector("[data-cost-basis-preview]");
+    if (!form || !target) return;
+    const quantity = (form.elements.namedItem("quantity") as HTMLInputElement | null)?.value;
+    const costPrice = (form.elements.namedItem("costPrice") as HTMLInputElement | null)?.value;
+    const currency = (form.elements.namedItem("currency") as HTMLInputElement | null)?.value || "USD";
+    const hiddenCostBasis = form.elements.namedItem("costBasisCents") as HTMLInputElement | null;
+    const cents = costBasisCentsFromInputs(quantity, costPrice);
+    if (hiddenCostBasis) hiddenCostBasis.value = cents > 0 ? String(cents) : "";
+    target.textContent = cents > 0
+      ? `Total cost basis: ${formatMoney(cents / 100, currency)}. P/L uses latest quote minus this cost basis.`
+      : "Total cost basis will be calculated from quantity and average cost price.";
+  }
+
+  function fillContentForm(post?: any) {
+    const form = contentForm;
+    if (!form) return;
+    form.reset();
+    const fields = {
+      id: post?.id ?? "",
+      lang: post?.lang ?? "en",
+      status: post?.status ?? "draft",
+      title: post?.title ?? "",
+      slug: post?.slug ?? "",
+      category: post?.category ?? "Notes",
+      tags: (post?.tags || []).join(", "),
+      publishedAt: post?.publishedAt ? String(post.publishedAt).slice(0, 16) : "",
+      description: post?.description ?? "",
+      bodyMarkdown: post?.bodyMarkdown ?? ""
+    };
+    for (const [key, value] of Object.entries(fields)) {
+      const field = form.elements.namedItem(key) as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | null;
+      if (field) field.value = String(value);
+    }
+    setEditorMarkdown(String(fields.bodyMarkdown));
+    const editorTitle = document.querySelector("[data-editor-title]");
+    const editorStatus = document.querySelector("[data-editor-status]");
+    if (editorTitle) editorTitle.textContent = post?.id ? "Edit post" : "New post";
+    if (editorStatus) editorStatus.textContent = post?.status ?? "draft";
+    const currentVersion = document.querySelector("[data-current-version]");
+    if (currentVersion) currentVersion.textContent = `v${post?.version ?? 1}`;
+    const open = document.querySelector("[data-content-open]") as HTMLAnchorElement | null;
+    if (open) open.href = post?.slug ? publicPostHref(post) : "/blog";
+    post?.id ? loadRevisions(post.id) : renderRevisions([]);
+  }
+
+  function readContentForm(form: HTMLFormElement) {
+    syncMarkdownSource();
+    const raw = Object.fromEntries(new FormData(form).entries()) as Record<string, string>;
+    return {
+      id: raw.id ? Number(raw.id) : null,
+      lang: raw.lang,
+      status: raw.status,
+      title: raw.title,
+      slug: raw.slug,
+      category: raw.category || "Notes",
+      tags: (raw.tags || "").split(",").map((tag) => tag.trim()).filter(Boolean),
+      publishedAt: raw.publishedAt ? new Date(raw.publishedAt).toISOString() : null,
+      description: raw.description,
+      bodyMarkdown: raw.bodyMarkdown || getEditorMarkdown()
+    };
+  }
+
+  function scheduleDraftAutosave() {
+    if (!contentForm || suppressEditorDirty) return;
+    const id = (contentForm.elements.namedItem("id") as HTMLInputElement | null)?.value;
+    const status = (contentForm.elements.namedItem("status") as HTMLSelectElement | null)?.value;
+    if (!id || status !== "draft") return;
+    window.clearTimeout(draftAutosaveTimer);
+    draftAutosaveTimer = window.setTimeout(() => {
+      autosaveDraft().catch(() => setSaveState("Autosave failed", "error"));
+    }, 1800);
+  }
+
+  async function autosaveDraft() {
+    if (!contentForm) return;
+    syncMarkdownSource();
+    const data = readContentForm(contentForm);
+    if (!data.id || data.status !== "draft") return;
+    if (!data.title.trim() || !data.slug.trim() || !data.description.trim() || !data.bodyMarkdown.trim()) return;
+    const requestId = ++draftAutosaveRequestId;
+    setSaveState("Autosaving draft...", "saving");
+    const { id, ...body } = data;
+    const saved = await api(`/api/admin/content/posts/${id}`, { method: "PATCH", body: JSON.stringify({ ...body, status: "draft" }) });
+    if (requestId !== draftAutosaveRequestId) return;
+    const index = contentPosts.findIndex((post) => post.id === saved.post.id);
+    if (index >= 0) contentPosts[index] = saved.post;
+    renderContentPosts();
+    setSaveState("Autosaved", "saved");
+  }
+
+  function filteredPosts() {
+    const query = ((document.querySelector("[data-post-search]") as HTMLInputElement | null)?.value || "").trim().toLowerCase();
+    if (!query) return contentPosts;
+    return contentPosts.filter((post) => [
+      post.title,
+      post.slug,
+      post.lang,
+      post.category,
+      ...(post.tags || [])
+    ].join(" ").toLowerCase().includes(query));
+  }
+
+  function renderContentPosts() {
+    const target = document.querySelector("[data-content-admin]");
+    const count = document.querySelector("[data-content-count]");
+    if (count) count.textContent = String(contentPosts.length);
+    if (!target) return;
+    const posts = filteredPosts();
+    if (!posts.length) {
+      target.innerHTML = "<p class='studio-muted'>No matching posts.</p>";
+      return;
+    }
+    target.innerHTML = posts.map((post) => `
+      <article class="studio-list-item">
+        <div>
+          <strong>${escapeHtml(post.title || "Untitled")}</strong>
+          <div class="studio-meta"><span>${escapeHtml(post.lang)}</span><span>${escapeHtml(post.slug)}</span></div>
+          <div class="studio-tag-row">
+            <span class="studio-tag">${escapeHtml(post.status)}</span>
+            <span class="studio-tag">${escapeHtml(post.category)}</span>
+            <span class="studio-tag">v${escapeHtml(post.version ?? 1)}</span>
+          </div>
+        </div>
+        <div class="studio-list-actions">
+          <button type="button" data-edit-post="${post.id}">Edit</button>
+          <a class="studio-button secondary" href="${escapeHtml(publicPostHref(post))}" target="_blank" rel="noreferrer">Open</a>
+          <button class="secondary danger" type="button" data-delete-post="${post.id}">Delete</button>
+        </div>
+      </article>
+    `).join("");
+  }
+
+  async function loadContentPosts() {
+    const data = await api("/api/admin/content/posts");
+    contentPosts = data.posts || [];
+    renderContentPosts();
+    if (!contentForm || (contentForm.elements.namedItem("id") as HTMLInputElement | null)?.value) return;
+    if (!getEditorMarkdown()) fillContentForm();
+  }
+
+  function renderRevisions(revisions: any[]) {
+    const target = document.querySelector("[data-revisions-admin]");
+    if (!target) return;
+    if (!revisions.length) {
+      target.innerHTML = "<p class='studio-muted'>Save the post to start revision history.</p>";
+      return;
+    }
+    target.innerHTML = revisions.map((revision) => `
+      <article class="studio-list-item compact">
+        <div>
+          <strong>v${escapeHtml(revision.version)}</strong>
+          <div class="studio-meta"><span>${escapeHtml(revision.changedAt)}</span><span>${escapeHtml(revision.status)}</span></div>
+        </div>
+        <button class="secondary" type="button" data-restore-revision="${revision.id}" data-restore-post="${revision.postId}">Restore</button>
+      </article>
+    `).join("");
+  }
+
+  async function loadRevisions(postId: number) {
+    const data = await api(`/api/admin/content/posts/${postId}/revisions`);
+    renderRevisions(data.revisions || []);
+  }
+
+  function renderModerationRows(target: Element | null, rows: any[], kind: "comments") {
+    if (!target) return;
+    if (!rows.length) {
+      target.innerHTML = "<p class='studio-muted'>No entries.</p>";
+      return;
+    }
+    target.innerHTML = `
+      <table class="studio-table">
+        <thead><tr><th>Author</th><th>Body</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody>
+          ${rows.map((row) => `
+            <tr>
+              <td>${escapeHtml(row.authorName)}<br><span class="studio-muted">${escapeHtml(row.createdAt)}</span></td>
+              <td>${escapeHtml(row.body)}${row.targetSlug || row.postSlug ? `<br><span class="studio-tag">${escapeHtml(row.targetType || "blog")}: ${escapeHtml(row.targetSlug || row.postSlug)}</span>` : ""}</td>
+              <td>${escapeHtml(row.status)}</td>
+              <td>
+                <button type="button" data-mod-kind="${kind}" data-mod-id="${row.id}" data-mod-status="approved">Approve</button>
+                <button class="secondary" type="button" data-mod-kind="${kind}" data-mod-id="${row.id}" data-mod-status="hidden">Hide</button>
+                <button class="secondary danger" type="button" data-mod-kind="${kind}" data-mod-id="${row.id}" data-mod-status="spam">Spam</button>
+              </td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    `;
+  }
+
+  async function moderate(id: number, status: string) {
+    await api(`/api/admin/comments/${id}`, { method: "PATCH", body: JSON.stringify({ status }) });
+    await loadComments();
+    await refreshPendingBadges();
+  }
+
+  async function loadComments() {
+    const data = await api("/api/admin/comments");
+    renderModerationRows(document.querySelector("[data-comments-admin]"), data.comments || [], "comments");
+  }
+
+  const portfolioPieColors = ["#2563eb", "#059669", "#d97706", "#7c3aed", "#dc2626", "#0891b2", "#4f46e5", "#65a30d"];
+
+  function positionMetrics(row: any) {
+    const quantity = Number(row.quantity);
+    const costBasis = Number(row.costBasisCents) / 100;
+    const avgCost = quantity > 0 && Number.isFinite(costBasis) ? costBasis / quantity : 0;
+    const quotePrice = Number(row.quote?.price);
+    const fxRate = Number(row.quote?.fxRateToBase || 1);
+    const hasQuote = Boolean(row.quote) && Number.isFinite(quotePrice) && quotePrice > 0 && Number.isFinite(fxRate) && fxRate > 0;
+    const marketValue = hasQuote && Number.isFinite(quantity) ? quantity * quotePrice * fxRate : 0;
+    const pnl = hasQuote ? marketValue - costBasis : 0;
+    const returnPercent = hasQuote && costBasis > 0 ? (pnl / costBasis) * 100 : 0;
+    return {
+      quantity,
+      costBasis,
+      avgCost,
+      quotePrice,
+      hasQuote,
+      marketValue,
+      pnl,
+      returnPercent,
+      currency: row.currency || row.quote?.currency || "USD",
+      quoteStatus: row.quote ? `${row.quote.status} · ${row.quote.asOf}` : "No quote"
+    };
+  }
+
+  function piePath(startPercent: number, endPercent: number) {
+    const startAngle = startPercent * 3.6 - 90;
+    const endAngle = endPercent * 3.6 - 90;
+    const point = (angle: number) => {
+      const radians = (angle * Math.PI) / 180;
+      return {
+        x: 50 + 46 * Math.cos(radians),
+        y: 50 + 46 * Math.sin(radians)
+      };
+    };
+    const start = point(startAngle);
+    const end = point(endAngle);
+    const largeArc = endPercent - startPercent > 50 ? 1 : 0;
+    return `M 50 50 L ${start.x.toFixed(3)} ${start.y.toFixed(3)} A 46 46 0 ${largeArc} 1 ${end.x.toFixed(3)} ${end.y.toFixed(3)} Z`;
+  }
+
+  function renderAdminPie(allocations: { label: string; value: number; weightPercent: number }[]) {
+    if (!allocations.length) {
+      return `
+        <div class="admin-pie-empty" aria-hidden="true">No priced holdings</div>
+        <p class="studio-muted">Refresh quotes to build the allocation chart.</p>
+      `;
+    }
+    let cursor = 0;
+    const slices = allocations.map((item, index) => {
+      const start = cursor;
+      cursor += item.weightPercent;
+      if (item.weightPercent >= 99.99) {
+        return `<circle cx="50" cy="50" r="46" fill="${portfolioPieColors[index % portfolioPieColors.length]}"></circle>`;
+      }
+      return `<path d="${piePath(start, cursor)}" fill="${portfolioPieColors[index % portfolioPieColors.length]}"></path>`;
+    }).join("");
+    const legend = allocations.map((item, index) => `
+      <li>
+        <span class="portfolio-pie-swatch" style="--slice-color:${portfolioPieColors[index % portfolioPieColors.length]}"></span>
+        <span>${escapeHtml(item.label)}</span>
+        <strong>${item.weightPercent.toFixed(1)}%</strong>
+      </li>
+    `).join("");
+    return `
+      <svg class="admin-portfolio-pie" viewBox="0 0 100 100" role="img" aria-label="Portfolio allocation by asset class">
+        ${slices}
+        <circle cx="50" cy="50" r="46" fill="none" stroke="#e2e8f0" stroke-width="1.5"></circle>
+      </svg>
+      <ul class="admin-pie-legend">${legend}</ul>
+    `;
+  }
+
+  function selectedOption(value: string, current: unknown) {
+    return value === String(current ?? "") ? " selected" : "";
+  }
+
+  async function loadPortfolio() {
+    const data = await api("/api/admin/portfolio/positions");
+    portfolioPositions = data.positions || [];
+    const target = document.querySelector("[data-portfolio-admin]");
+    if (!target) return;
+    if (!portfolioPositions.length) {
+      target.innerHTML = "<p class='studio-muted'>No positions yet.</p>";
+      return;
+    }
+    const rows = portfolioPositions.map((row) => ({ row, metrics: positionMetrics(row) }));
+    const activeRows = rows.filter(({ row, metrics }) => row.status === "active" && metrics.hasQuote);
+    const totalMarketValue = activeRows.reduce((sum, item) => sum + item.metrics.marketValue, 0);
+    const totalCostBasis = rows
+      .filter(({ row }) => row.status === "active")
+      .reduce((sum, item) => sum + item.metrics.costBasis, 0);
+    const totalPnl = totalMarketValue - totalCostBasis;
+    const totalReturnPercent = totalCostBasis > 0 ? (totalPnl / totalCostBasis) * 100 : 0;
+    const allocationMap = new Map<string, number>();
+    for (const { row, metrics } of activeRows) {
+      allocationMap.set(row.assetClass, (allocationMap.get(row.assetClass) ?? 0) + metrics.marketValue);
+    }
+    const allocations = [...allocationMap.entries()]
+      .map(([label, value]) => ({ label, value, weightPercent: totalMarketValue > 0 ? (value / totalMarketValue) * 100 : 0 }))
+      .sort((a, b) => b.value - a.value);
+    target.innerHTML = `
+      <section class="portfolio-admin-dashboard">
+        <article class="portfolio-admin-card portfolio-admin-chart">
+          <div>
+            <p class="studio-kicker">Allocation</p>
+            <h3>By asset class</h3>
+          </div>
+          ${renderAdminPie(allocations)}
+        </article>
+        <article class="portfolio-admin-card">
+          <span class="studio-muted">Market value</span>
+          <strong>${formatMoney(totalMarketValue, "USD")}</strong>
+        </article>
+        <article class="portfolio-admin-card">
+          <span class="studio-muted">Cost basis</span>
+          <strong>${formatMoney(totalCostBasis, "USD")}</strong>
+        </article>
+        <article class="portfolio-admin-card">
+          <span class="studio-muted">Unrealized P/L</span>
+          <strong class="${totalPnl >= 0 ? "portfolio-pnl-positive" : "portfolio-pnl-negative"}">${formatMoney(totalPnl, "USD")} · ${formatPercent(totalReturnPercent)}</strong>
+        </article>
+      </section>
+      <table class="studio-table portfolio-sheet-table">
+        <thead><tr><th>Ticker</th><th>Name</th><th>Class</th><th>Region</th><th>Qty</th><th>Avg cost</th><th>Latest</th><th>Value</th><th>P/L</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+          ${rows.map(({ row, metrics }: any) => `
+            <tr data-position-row="${row.id}">
+              <td><input data-inline-field="ticker" value="${escapeHtml(row.ticker)}" aria-label="Ticker" /></td>
+              <td><input data-inline-field="name" value="${escapeHtml(row.name)}" aria-label="Name" /></td>
+              <td><input data-inline-field="assetClass" value="${escapeHtml(row.assetClass)}" aria-label="Asset class" /></td>
+              <td><input data-inline-field="region" value="${escapeHtml(row.region)}" aria-label="Region" /></td>
+              <td><input data-inline-field="quantity" type="number" min="0" step="0.0001" value="${escapeHtml(row.quantity)}" aria-label="Quantity" /></td>
+              <td>
+                <input data-inline-field="costPrice" type="number" min="0" step="0.0001" value="${escapeHtml(costPriceInputFromPosition(row))}" aria-label="Average cost" />
+                <span class="studio-muted">cost ${formatMoney(metrics.costBasis, row.currency)}</span>
+              </td>
+              <td>${metrics.hasQuote ? `${formatMoney(metrics.quotePrice, row.quote?.currency || row.currency)}<br><span class="studio-muted">${escapeHtml(metrics.quoteStatus)}</span>` : "<span class='studio-muted'>Refresh quotes</span>"}</td>
+              <td>${metrics.hasQuote ? formatMoney(metrics.marketValue, "USD") : "—"}</td>
+              <td>${metrics.hasQuote ? `<span class="${metrics.pnl >= 0 ? "portfolio-pnl-positive" : "portfolio-pnl-negative"}">${formatMoney(metrics.pnl, "USD")}<br>${formatPercent(metrics.returnPercent)}</span>` : "—"}</td>
+              <td>
+                <select data-inline-field="status" aria-label="Status">
+                  <option value="active"${selectedOption("active", row.status)}>active</option>
+                  <option value="watchlist"${selectedOption("watchlist", row.status)}>watchlist</option>
+                  <option value="closed"${selectedOption("closed", row.status)}>closed</option>
+                </select>
+              </td>
+              <td>
+                <button type="button" data-save-position-row="${row.id}">Save</button>
+                <button type="button" data-edit-position="${row.id}">Edit</button>
+                <button class="secondary danger" type="button" data-delete-position="${row.id}">Delete</button>
+              </td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    `;
+  }
+
+  function fillPositionForm(position?: any) {
+    const form = document.querySelector("[data-position-form]") as HTMLFormElement | null;
+    if (!form) return;
+    form.reset();
+      const fields = {
+        id: position?.id ?? "",
+      assetId: position?.assetId ?? "",
+      provider: "alpha_vantage",
+      exchange: "",
+      ticker: position?.ticker ?? "",
+      name: position?.name ?? "",
+      assetClass: position?.assetClass ?? "",
+      region: position?.region ?? "",
+      currency: position?.currency ?? "USD",
+      asOf: position?.asOf ?? todayDateInputValue(),
+      quantity: position?.quantity ?? "",
+      costBasisCents: position?.costBasisCents ?? "",
+      costPrice: costPriceInputFromPosition(position),
+      aliases: position?.aliases?.join?.(", ") ?? "",
+      status: position?.status ?? "active",
+      notes: position?.notes ?? ""
+    };
+    for (const [key, value] of Object.entries(fields)) {
+      const field = form.elements.namedItem(key) as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | null;
+      if (field) field.value = String(value);
+    }
+    const submit = document.querySelector("[data-position-submit]");
+    const cancel = document.querySelector("[data-position-cancel]") as HTMLElement | null;
+    if (submit) submit.textContent = position?.id ? "Save position" : "Add position";
+    if (cancel) cancel.hidden = !position?.id;
+    updateCostBasisPreview();
+  }
+
+  function renderMarketResults(assets: any[], query = "") {
+    const target = document.querySelector("[data-market-results]") as HTMLElement | null;
+    if (!target) return;
+    const manual = query.trim()
+      ? [{
+        id: "",
+        provider: "manual",
+        symbol: query.trim().toUpperCase().replace(/[^A-Z0-9.-]/g, "").slice(0, 24) || query.trim(),
+        name: query.trim(),
+        assetType: "Equity",
+        region: "Global",
+        currency: "USD",
+        exchange: "Manual",
+        aliases: [query.trim()],
+        source: "manual"
+      }]
+      : [];
+    const rows = [...assets, ...manual];
+    if (!rows.length) {
+      target.hidden = true;
+      target.innerHTML = "";
+      marketSearchInput?.setAttribute("aria-expanded", "false");
+      return;
+    }
+    target.hidden = false;
+    marketSearchInput?.setAttribute("aria-expanded", "true");
+    target.innerHTML = rows.map((asset, index) => `
+      <article class="studio-list-item compact" role="option" aria-selected="${index === 0 ? "true" : "false"}">
+        <div>
+          <strong>${escapeHtml(asset.symbol)}</strong> ${escapeHtml(asset.name)}
+          <div class="studio-meta"><span>${escapeHtml(asset.assetType)}</span><span>${escapeHtml(asset.region || "")}</span><span>${escapeHtml(asset.currency)}</span><span>${escapeHtml(asset.source || "provider")}</span></div>
+        </div>
+        <button type="button"
+          data-select-asset="${escapeHtml(asset.id)}"
+          data-asset-symbol="${escapeHtml(asset.symbol)}"
+          data-asset-name="${escapeHtml(asset.name)}"
+          data-asset-type="${escapeHtml(asset.assetType)}"
+          data-asset-region="${escapeHtml(asset.region || "")}"
+          data-asset-currency="${escapeHtml(asset.currency)}"
+          data-asset-provider="${escapeHtml(asset.provider)}"
+          data-asset-aliases="${escapeHtml((asset.aliases || []).join(", "))}"
+          data-asset-exchange="${escapeHtml(asset.exchange || "")}">${asset.source === "manual" ? "Use manual" : "Use"}</button>
+      </article>
+    `).join("");
+  }
+
+  async function searchMarketAssets(query: string) {
+    if (query.trim().length < 1) {
+      renderMarketResults([]);
+      return;
+    }
+    if (marketStatus) marketStatus.textContent = "Searching provider and cached assets...";
+    const data = await api(`/api/admin/market/search?q=${encodeURIComponent(query.trim())}&lang=en`);
+    if (marketStatus) {
+      marketStatus.textContent = data.providerStatus?.ok
+        ? "Provider results and cached fuzzy matches loaded."
+        : `${data.providerStatus?.message || "Provider unavailable."} Showing cached/manual fallback.`;
+    }
+    renderMarketResults(data.assets || [], query);
+  }
+
+  async function loadProfile() {
+    const data = await api("/api/admin/profile");
+    const form = document.querySelector("[data-profile-form]") as HTMLFormElement | null;
+    if (!form || !data.profile) return;
+    for (const [key, value] of Object.entries(data.profile)) {
+      const field = form.elements.namedItem(key) as HTMLInputElement | HTMLTextAreaElement | null;
+      if (field) field.value = String(value ?? "");
+    }
+  }
+
+  async function loadMe() {
+    try {
+      const data = await api("/api/admin/me");
+      if (!data.authenticated || !data.admin) throw new Error("Not logged in");
+      csrfToken = data.csrfToken;
+      setLoggedIn(data.admin);
+      updatePendingBadges(data.pending);
+      setStatus("Logged in.");
+      await Promise.all([loadContentPosts(), loadComments(), loadPortfolio(), loadProfile()]);
+    } catch (error) {
+      retryMeAfterApiOnline = error instanceof AdminApiError && error.code === "API_UNAVAILABLE";
+      if (retryMeAfterApiOnline) {
+        setAdminState("offline");
+        setLoginDisabled(true);
+        setStatus(apiCheckingMessage);
+      } else {
+        setLoggedOut("Log in to manage the site.");
+      }
+    }
+  }
+
+  function openLinkDialog() {
+    const textInput = linkDialogForm?.elements.namedItem("text") as HTMLInputElement | null;
+    const urlInput = linkDialogForm?.elements.namedItem("url") as HTMLInputElement | null;
+    if (textInput) textInput.value = selectedEditorText() || "link text";
+    if (urlInput) urlInput.value = "";
+    linkDialog?.showModal();
+  }
+
+  loginForm?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const body = JSON.stringify(Object.fromEntries(new FormData(loginForm).entries()));
+    setStatus("Signing in...");
+    try {
+      const data = await api("/api/admin/login", { method: "POST", body });
+      csrfToken = data.csrfToken;
+      setLoggedIn(data.admin);
+      updatePendingBadges(data.pending);
+      setStatus("Logged in.");
+      await Promise.all([loadContentPosts(), loadComments(), loadPortfolio(), loadProfile()]);
+    } catch (error) {
+      if (error instanceof AdminApiError && error.code === "API_UNAVAILABLE") setLoginDisabled(true);
+      setStatus(error instanceof AdminApiError ? error.message : "Login failed.");
+    }
+  });
+
+  document.querySelector("[data-post-search]")?.addEventListener("input", renderContentPosts);
+
+  editorBlockStyle?.addEventListener("change", (event) => {
+    const value = (event.currentTarget as HTMLSelectElement).value;
+    const command = value === "quote" ? "quote" : value === "code" ? "code" : value;
+    applyDocCommand(command);
+  });
+
+	  document.querySelector("[data-market-search]")?.addEventListener("input", (event) => {
+    const input = event.currentTarget as HTMLInputElement;
+    window.clearTimeout(marketSearchTimer);
+    marketSearchTimer = window.setTimeout(() => {
+      searchMarketAssets(input.value).catch((error) => {
+        setStatus(error instanceof Error ? error.message : "Market search failed.");
+        renderMarketResults([]);
+      });
+	    }, 250);
+	  });
+
+	  marketSearchInput?.addEventListener("keydown", (event) => {
+	    const first = document.querySelector("[data-market-results] button[data-select-asset]") as HTMLButtonElement | null;
+	    if ((event.key === "ArrowDown" || event.key === "Enter") && first) {
+	      event.preventDefault();
+	      first.focus();
+	      if (event.key === "Enter") first.click();
+	    }
+	  });
+
+  document.querySelector("[data-content-form] input[name='title']")?.addEventListener("input", (event) => {
+    const form = (event.currentTarget as HTMLInputElement).form;
+    const slug = form?.elements.namedItem("slug") as HTMLInputElement | null;
+    const id = form?.elements.namedItem("id") as HTMLInputElement | null;
+    if (slug && !id?.value && !slug.dataset.touched) slug.value = slugify((event.currentTarget as HTMLInputElement).value);
+    setSaveState("Unsaved changes", "dirty");
+    scheduleDraftAutosave();
+  });
+
+  document.querySelector("[data-content-form] input[name='slug']")?.addEventListener("input", (event) => {
+    (event.currentTarget as HTMLInputElement).dataset.touched = "true";
+    setSaveState("Unsaved changes", "dirty");
+    scheduleDraftAutosave();
+  });
+
+	  contentForm?.addEventListener("input", (event) => {
+	    const target = event.target as HTMLElement;
+	    if (!target.closest("[data-doc-editor]")) {
+        setSaveState("Unsaved changes", "dirty");
+        scheduleDraftAutosave();
+      }
+	  });
+
+  contentForm?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    window.clearTimeout(draftAutosaveTimer);
+    const form = event.currentTarget as HTMLFormElement;
+    syncMarkdownSource();
+    if (!form.reportValidity()) return;
+    if (!getEditorMarkdown().trim()) {
+      setSaveState("Body is required.", "error");
+      return;
+    }
+    const submitter = (event as SubmitEvent).submitter as HTMLElement | null;
+    const forcedStatus = submitter?.getAttribute("data-save-status");
+    if (forcedStatus) {
+      const status = form.elements.namedItem("status") as HTMLSelectElement | null;
+      if (status) status.value = forcedStatus;
+    }
+    const data = readContentForm(form);
+    const { id, ...body } = data;
+    const path = id ? `/api/admin/content/posts/${id}` : "/api/admin/content/posts";
+    setSaveState(data.status === "published" ? "Publishing..." : "Saving draft...", "saving");
+    try {
+      const saved = await api(path, { method: id ? "PATCH" : "POST", body: JSON.stringify(body) });
+      fillContentForm(saved.post);
+      setStatus(data.status === "published" ? "Post published." : "Draft saved.");
+      setSaveState(data.status === "published" ? "Published" : "Draft saved", "saved");
+      await loadContentPosts();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Save failed.";
+      setStatus(message);
+      setSaveState(message, "error");
+    }
+  });
+
+  document.querySelector("[data-asset-upload]")?.addEventListener("change", async (event) => {
+    const input = event.currentTarget as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+    const body = new FormData();
+    body.append("file", file);
+    if (uploadStatus) uploadStatus.textContent = "Uploading...";
+    try {
+	      const data = await api("/api/admin/assets", { method: "POST", body });
+	      insertEditorImage(data.asset.publicPath, file.name);
+      setStatus("Image uploaded.");
+      if (uploadStatus) uploadStatus.textContent = "Image inserted.";
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Image upload failed.";
+      setStatus(message);
+      if (uploadStatus) uploadStatus.textContent = message;
+    } finally {
+      input.value = "";
+    }
+  });
+
+	  document.addEventListener("click", async (event) => {
+    const button = (event.target as HTMLElement).closest("button");
+    if (!button) return;
+
+    if (button.hasAttribute("data-toggle-meta")) {
+      const isOpen = adminApp?.hasAttribute("data-meta-open") ?? false;
+      setWorkspaceDrawer("meta", !isOpen);
+      return;
+    }
+
+    if (button.hasAttribute("data-close-meta")) {
+      setWorkspaceDrawer("meta", false);
+      return;
+    }
+
+    if (button.hasAttribute("data-toggle-library")) {
+      const isOpen = adminApp?.hasAttribute("data-library-open") ?? false;
+      setWorkspaceDrawer("library", !isOpen);
+      return;
+    }
+
+    if (button.hasAttribute("data-api-retry")) {
+      ownerStatusStartedAt = Date.now();
+      await checkOwnerStatusWithRetry(true);
+      return;
+    }
+
+    const panel = button.getAttribute("data-panel");
+    if (panel) showPanel(panel);
+
+    const refresh = button.getAttribute("data-refresh");
+    if (refresh === "content") await loadContentPosts();
+    if (refresh === "comments") await loadComments();
+    if (refresh === "portfolio") await loadPortfolio();
+    if (refresh === "profile") await loadProfile();
+    if (button.hasAttribute("data-refresh-quotes")) {
+      setStatus("Refreshing market quotes...");
+      await api("/api/admin/market/quotes/refresh", { method: "POST", body: JSON.stringify({}) });
+      await loadPortfolio();
+      setStatus("Market quote refresh complete.");
+    }
+
+    const editorMode = button.getAttribute("data-editor-view");
+    if (editorMode) setEditorMode(editorMode);
+
+    const editorAction = button.getAttribute("data-doc-action");
+    if (editorAction === "undo") {
+      docsEditor?.undo();
+      syncMarkdownSource();
+      scheduleEditorPreview();
+      updateEditorChrome();
+    }
+    if (editorAction === "redo") {
+      docsEditor?.redo();
+      syncMarkdownSource();
+      scheduleEditorPreview();
+      updateEditorChrome();
+    }
+
+    const mark = button.getAttribute("data-doc-mark");
+    if (mark === "bold") docsEditor?.toggleBold();
+    if (mark === "italic") docsEditor?.toggleItalic();
+    if (mark === "underline") docsEditor?.toggleUnderline();
+    if (mark === "code") docsEditor?.toggleCode();
+    if (mark) {
+      syncMarkdownSource();
+      scheduleEditorPreview();
+      updateEditorChrome();
+    }
+
+    const docCommand = button.getAttribute("data-doc-command");
+    if (docCommand) applyDocCommand(docCommand);
+
+    const align = button.getAttribute("data-doc-align") as "left" | "center" | "right" | "justify" | null;
+    if (align) {
+      docsEditor?.setTextAlign(align);
+      syncMarkdownSource();
+      scheduleEditorPreview();
+      updateEditorChrome();
+    }
+
+    if (button.hasAttribute("data-md-link")) openLinkDialog();
+    if (button.hasAttribute("data-md-emoji") && emojiPicker) {
+      const rect = button.getBoundingClientRect();
+      emojiPicker.style.left = `${Math.min(rect.left, window.innerWidth - 260)}px`;
+      emojiPicker.style.top = `${rect.bottom + 8}px`;
+      emojiPicker.hidden = !emojiPicker.hidden;
+    }
+    if (button.closest(".docs-menu-panel") && !button.hasAttribute("data-md-emoji")) {
+      button.closest("details")?.removeAttribute("open");
+    }
+    const emoji = button.getAttribute("data-emoji-value");
+    if (emoji) {
+      replaceEditorSelection(emoji);
+      if (emojiPicker) emojiPicker.hidden = true;
+    }
+    if (button.hasAttribute("data-link-cancel")) linkDialog?.close();
+
+    const id = button.getAttribute("data-mod-id");
+    const kind = button.getAttribute("data-mod-kind") as "comments" | null;
+    const modStatus = button.getAttribute("data-mod-status");
+    if (id && kind && modStatus) await moderate(Number(id), modStatus);
+
+    const selectedAsset = button.getAttribute("data-select-asset");
+    if (button.hasAttribute("data-select-asset")) {
+      const form = document.querySelector("[data-position-form]") as HTMLFormElement | null;
+      const setField = (name: string, value: string) => {
+        const field = form?.elements.namedItem(name) as HTMLInputElement | HTMLSelectElement | null;
+        if (field) field.value = value;
+      };
+      setField("assetId", selectedAsset || "");
+      setField("provider", button.getAttribute("data-asset-provider") || "manual");
+      setField("exchange", button.getAttribute("data-asset-exchange") || "");
+      setField("ticker", button.getAttribute("data-asset-symbol") || "");
+      setField("name", button.getAttribute("data-asset-name") || "");
+      setField("assetClass", button.getAttribute("data-asset-type") || "Equity");
+      setField("region", button.getAttribute("data-asset-region") || "");
+      setField("currency", button.getAttribute("data-asset-currency") || "USD");
+      setField("aliases", button.getAttribute("data-asset-aliases") || "");
+      renderMarketResults([]);
+      setStatus("Asset selected.");
+    }
+
+    const deletePosition = button.getAttribute("data-delete-position");
+    if (deletePosition) {
+      await api(`/api/admin/portfolio/positions/${deletePosition}`, { method: "DELETE" });
+      await loadPortfolio();
+      fillPositionForm();
+    }
+    const savePositionRow = button.getAttribute("data-save-position-row");
+    if (savePositionRow) {
+      const position = portfolioPositions.find((item) => item.id === Number(savePositionRow));
+      const row = button.closest("[data-position-row]") as HTMLElement | null;
+      if (position && row) {
+        const inlineValue = (name: string) => {
+          const field = row.querySelector(`[data-inline-field="${name}"]`) as HTMLInputElement | HTMLSelectElement | null;
+          return field?.value ?? "";
+        };
+        const quantity = Number(inlineValue("quantity"));
+        const costPrice = Number(inlineValue("costPrice"));
+        const body = {
+          assetId: position.assetId ?? undefined,
+          provider: "alpha_vantage",
+          exchange: position.exchange ?? "",
+          aliases: position.aliases ?? [],
+          ticker: inlineValue("ticker"),
+          name: inlineValue("name"),
+          assetClass: inlineValue("assetClass"),
+          region: inlineValue("region"),
+          currency: position.currency || position.quote?.currency || "USD",
+          quantity,
+          costBasisCents: costBasisCentsFromInputs(quantity, costPrice),
+          marketValueCents: position.marketValueCents ?? 0,
+          asOf: position.asOf || todayDateInputValue(),
+          status: inlineValue("status") || position.status || "active",
+          notes: position.notes ?? ""
+        };
+        setStatus("Saving position row...");
+        await api(`/api/admin/portfolio/positions/${savePositionRow}`, { method: "PATCH", body: JSON.stringify(body) });
+        await loadPortfolio();
+        setStatus("Position row saved.");
+      }
+    }
+    const editPosition = button.getAttribute("data-edit-position");
+    if (editPosition) {
+      const position = portfolioPositions.find((item) => item.id === Number(editPosition));
+      fillPositionForm(position);
+    }
+
+    const editPost = button.getAttribute("data-edit-post");
+    if (editPost) {
+      const post = contentPosts.find((item) => item.id === Number(editPost));
+      fillContentForm(post);
+      showPanel("content");
+      setWorkspaceDrawer("library", false);
+    }
+    const revision = button.getAttribute("data-restore-revision");
+    const revisionPost = button.getAttribute("data-restore-post");
+    if (revision && revisionPost && window.confirm("Restore this revision?")) {
+      const saved = await api(`/api/admin/content/posts/${revisionPost}/revisions/${revision}/restore`, { method: "POST" });
+      fillContentForm(saved.post);
+      setStatus("Revision restored.");
+      await loadContentPosts();
+    }
+    const deletePost = button.getAttribute("data-delete-post");
+    if (deletePost && window.confirm("Delete this post?")) {
+      await api(`/api/admin/content/posts/${deletePost}`, { method: "DELETE" });
+      await loadContentPosts();
+      fillContentForm();
+    }
+    if (button.hasAttribute("data-new-post")) {
+      fillContentForm();
+      setWorkspaceDrawer("meta", true);
+      setWorkspaceDrawer("library", false);
+    }
+    if (button.hasAttribute("data-position-cancel")) fillPositionForm();
+    if (button.hasAttribute("data-logout")) {
+      await api("/api/admin/logout", { method: "POST" });
+      location.reload();
+    }
+  });
+
+  linkDialogForm?.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const textInput = linkDialogForm.elements.namedItem("text") as HTMLInputElement | null;
+    const urlInput = linkDialogForm.elements.namedItem("url") as HTMLInputElement | null;
+	    const text = textInput?.value.trim() || "link text";
+	    const url = urlInput?.value.trim() || "";
+	    if (!url) return;
+	    setupEditor();
+	    docsEditor?.setLink(url, text);
+	    syncMarkdownSource();
+	    scheduleEditorPreview();
+	    updateEditorChrome();
+	    linkDialog?.close();
+	  });
+
+  const positionForm = document.querySelector("[data-position-form]") as HTMLFormElement | null;
+  positionForm?.addEventListener("input", updateCostBasisPreview);
+  positionForm?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const form = event.currentTarget as HTMLFormElement;
+    const raw = Object.fromEntries(new FormData(form).entries()) as Record<string, any>;
+    const { id: rawId, costPrice, ...positionRaw } = raw;
+    const id = rawId ? Number(rawId) : null;
+    const costBasisCents = costPrice !== undefined && String(costPrice).trim() !== ""
+      ? costBasisCentsFromInputs(positionRaw.quantity, costPrice)
+      : Number(positionRaw.costBasisCents || 0);
+    const body = {
+      ...positionRaw,
+      assetId: positionRaw.assetId ? Number(positionRaw.assetId) : undefined,
+      asOf: positionRaw.asOf || todayDateInputValue(),
+      quantity: Number(positionRaw.quantity),
+      costBasisCents
+    };
+    await api(id ? `/api/admin/portfolio/positions/${id}` : "/api/admin/portfolio/positions", {
+      method: id ? "PATCH" : "POST",
+      body: JSON.stringify(body)
+    });
+    fillPositionForm();
+    await loadPortfolio();
+    setStatus(id ? "Position saved." : "Position added.");
+  });
+
+  document.querySelector("[data-profile-form]")?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const form = event.currentTarget as HTMLFormElement;
+    await api("/api/admin/profile", { method: "PATCH", body: JSON.stringify(Object.fromEntries(new FormData(form).entries())) });
+    setStatus("Profile saved.");
+  });
+
+  setupEditor();
+  setEditorMode("edit");
+  fillPositionForm();
+  startOwnerStatusChecks();
+  loadMe();
+</script>

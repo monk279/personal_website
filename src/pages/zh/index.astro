@@ -1,0 +1,86 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import EditablePostsList from "@/components/EditablePostsList.astro";
+import PortfolioPublic from "@/components/PortfolioPublic.astro";
+import { site } from "@/config/site";
+import { getLatestPosts } from "@/lib/posts";
+import { formatDate } from "@/lib/format";
+
+const locale = "zh";
+const posts = getLatestPosts(locale);
+---
+
+<BaseLayout title={site.name} description={site.profile.zh.intro} locale={locale} path="/zh">
+  <section class="container ben-page-hero">
+    <h1>什么值得记录，什么值得长期保留？</h1>
+    <p>我会在这里回到噪音之外，记录软件、市场、个人系统，以及如何构建一个长期可维护的线上基地。</p>
+  </section>
+
+  <section class="ben-section">
+    <div class="container ben-section-grid">
+      <div class="ben-section-label">
+        <h2>博客</h2>
+        <p>精选</p>
+      </div>
+      <div class="ben-feature-list">
+        <EditablePostsList locale={locale} limit={3} />
+        {posts.map((post) => (
+          <article class="ben-feature-item">
+            <time datetime={post.publishedAt}>{formatDate(post.publishedAt, locale)}</time>
+            <h3><a href={`/zh/blog/${post.slug}`}>{post.title}</a></h3>
+            <p>{post.description}</p>
+          </article>
+        ))}
+        <p><a class="ben-action" href="/zh/blog">查看更多</a></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="ben-section">
+    <div class="container ben-promo-grid">
+      <article class="ben-promo">
+        <p class="ben-kicker">投资组合</p>
+        <h2>公开比例，而不是账户规模。</h2>
+        <p>这个页面只展示公开百分比：配置、暴露、百分比收益和报价新鲜度。数量、成本和市值保留在后台。</p>
+        <p><a class="ben-action" href="/zh/portfolio">查看详情</a></p>
+      </article>
+      <PortfolioPublic locale={locale} compact />
+    </div>
+  </section>
+
+  <section class="ben-section">
+    <div class="container ben-signup">
+      <div>
+        <p class="ben-kicker">关注更新</p>
+        <h2>发生了什么，我学到了什么，什么值得留下？</h2>
+        <p>更新会集中整理最新博客、投资笔记，以及值得之后回看的判断。</p>
+      </div>
+      <form data-static-signup>
+        <label>邮箱地址<input type="email" autocomplete="email" /></label>
+        <button type="button" data-static-signup-button>关注</button>
+        <p class="muted" data-static-signup-status></p>
+      </form>
+    </div>
+  </section>
+
+  <section class="ben-section ben-section-last">
+    <div class="container ben-notes">
+      <div>
+        <p class="ben-kicker">关于与联系</p>
+        <h2>一个简洁的线上基地。</h2>
+      </div>
+      <p>{site.profile.zh.about}</p>
+      <p>你可以阅读 <a href="/zh/blog">博客归档</a>，查看 <a href="/zh/portfolio">公开投资组合快照</a>，通过 <a href={`mailto:${site.email}`}>{site.email}</a> 联系我，或打开 <a href="/admin">管理页面</a>。</p>
+    </div>
+  </section>
+</BaseLayout>
+
+<script>
+  for (const root of document.querySelectorAll("[data-static-signup]")) {
+    const button = root.querySelector("[data-static-signup-button]");
+    const status = root.querySelector("[data-static-signup-status]");
+    button?.addEventListener("click", () => {
+      if (status) status.textContent = "谢谢！";
+    });
+  }
+</script>

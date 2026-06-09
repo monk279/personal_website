@@ -1,0 +1,40 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import { site } from "@/config/site";
+---
+
+<BaseLayout title="关于与联系" description={site.profile.zh.about} locale="zh" path="/zh/about">
+  <section class="container ben-page-hero ben-page-hero-compact">
+    <p class="ben-kicker">关于与联系</p>
+    <h1>一个简洁的线上基地。</h1>
+    <p data-profile-field="bio">{site.profile.zh.about}</p>
+  </section>
+
+  <section class="ben-section">
+    <div class="container ben-promo-grid">
+      <article class="ben-promo">
+        <p class="ben-kicker">写作</p>
+        <h2>比信息流更耐久的笔记。</h2>
+        <p>文章系统刻意保持朴素：文章可以作为 Markdown/MDX 保存在仓库中，也可以通过站主工作台发布和管理。</p>
+        <p><a class="ben-action" href="/zh/blog">阅读博客</a></p>
+      </article>
+      <article class="ben-promo">
+        <p class="ben-kicker">投资组合</p>
+        <h2>分享过程，不暴露私人账户细节。</h2>
+        <p>公开投资组合只展示配置和百分比收益，不展示数量、价格、成本、市值或账户规模。</p>
+        <p><a class="ben-action" href="/zh/portfolio">查看投资组合</a></p>
+      </article>
+    </div>
+  </section>
+
+  <section class="ben-section ben-section-last">
+    <div class="container ben-notes">
+      <div>
+        <p class="ben-kicker">联系</p>
+        <h2>欢迎联系。</h2>
+      </div>
+      <p>邮箱：<a href={`mailto:${site.email}`}>{site.email}</a></p>
+      <p>管理页面是 <code>/admin</code>，仅供站主使用。</p>
+    </div>
+  </section>
+</BaseLayout>

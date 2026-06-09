@@ -1,0 +1,163 @@
+---
+import { labels } from "@/lib/i18n";
+import type { Locale } from "@/config/site";
+
+type Props = {
+  locale: Locale;
+  compact?: boolean;
+};
+
+const { locale, compact = false } = Astro.props;
+const t = labels(locale);
+---
+
+<section class:list={["portfolio-public", compact && "card"]} data-portfolio-public data-portfolio-locale={locale}>
+  <div class="section-heading">
+    <h2>{t.portfolio}</h2>
+    <a href={locale === "zh" ? "/zh/portfolio" : "/portfolio"}>{locale === "zh" ? "查看详情" : "View details"}</a>
+  </div>
+  <div data-portfolio-state class="grid two">
+    <div class="card">
+      <p class="muted">{locale === "zh" ? "正在读取公开百分比数据。" : "Loading public percentage data."}</p>
+    </div>
+  </div>
+  <p class="muted">{t.notAdvice}</p>
+</section>
+
+<script>
+  const roots = document.querySelectorAll("[data-portfolio-public]");
+  const palette = ["#1d5f73", "#a33d2a", "#8a6f35", "#4f6f37", "#7b4f82", "#6f5c49", "#394b5f"];
+  const esc = (value: unknown) => String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+
+  type AllocationItem = { label: string; weightPercent: number };
+
+  const clampPercent = (value: unknown) => {
+    const numeric = Number(value);
+    return Number.isFinite(numeric) ? Math.max(0, Math.min(100, numeric)) : 0;
+  };
+
+  const fmt = (value: number) => `${clampPercent(value).toFixed(2)}%`;
+  const bar = (item: AllocationItem, index = 0) => `
+    <div>
+      <div class="meta"><strong>${esc(item.label)}</strong><span>${fmt(item.weightPercent)}</span></div>
+      <div class="bar"><span style="width:${clampPercent(item.weightPercent)}%;--bar-color:${palette[index % palette.length]}"></span></div>
+    </div>`;
+
+  const copyFor = (locale: string | null) => locale === "zh"
+    ? { allocation: "资产配置", noData: "暂无公开配置数据。", totalReturn: "总收益率", asOf: "截至", notSet: "未设置", quotesUnavailable: "报价暂不可用。", quotesFetched: "报价获取时间", stale: "过期", unpriced: "未定价" }
+    : { allocation: "Portfolio asset allocation", noData: "No public portfolio data yet.", totalReturn: "Total return", asOf: "As of", notSet: "not set", quotesUnavailable: "Quotes not available yet.", quotesFetched: "Quotes fetched", stale: "stale", unpriced: "unpriced" };
+
+  const allocationItems = (items: unknown): AllocationItem[] => Array.isArray(items)
+    ? items.map((item: any) => ({
+      label: String(item?.label ?? ""),
+      weightPercent: clampPercent(item?.weightPercent)
+    })).filter((item) => item.label)
+    : [];
+
+  const polarPoint = (center: number, radius: number, angle: number) => {
+    const radians = (angle - 90) * Math.PI / 180;
+    return {
+      x: center + radius * Math.cos(radians),
+      y: center + radius * Math.sin(radians)
+    };
+  };
+
+  function pieSlicePath(startAngle: number, endAngle: number) {
+    const center = 50;
+    const radius = 42;
+    const start = polarPoint(center, radius, startAngle);
+    const end = polarPoint(center, radius, endAngle);
+    const largeArc = endAngle - startAngle > 180 ? 1 : 0;
+    return `M ${center} ${center} L ${start.x.toFixed(3)} ${start.y.toFixed(3)} A ${radius} ${radius} 0 ${largeArc} 1 ${end.x.toFixed(3)} ${end.y.toFixed(3)} Z`;
+  }
+
+  function renderPieChart(items: AllocationItem[], chartId: string, copy: ReturnType<typeof copyFor>) {
+    const positiveItems = items.filter((item) => item.weightPercent > 0);
+    const total = positiveItems.reduce((sum, item) => sum + item.weightPercent, 0);
+    if (!positiveItems.length || total <= 0) {
+      return `
+        <div class="portfolio-pie-wrap">
+          <div class="portfolio-pie-empty" role="img" aria-label="${esc(copy.noData)}">${esc(copy.noData)}</div>
+        </div>
+      `;
+    }
+
+    let cursor = 0;
+    const slices = positiveItems.length === 1
+      ? `<circle class="portfolio-pie-slice" cx="50" cy="50" r="42" fill="${palette[0]}" />`
+      : positiveItems.map((item, index) => {
+        const start = cursor;
+        const end = cursor + (item.weightPercent / total) * 360;
+        cursor = end;
+        return `<path class="portfolio-pie-slice" d="${pieSlicePath(start, end)}" fill="${palette[index % palette.length]}"><title>${esc(item.label)} ${fmt(item.weightPercent)}</title></path>`;
+      }).join("");
+
+    const legend = positiveItems.map((item, index) => `
+      <li>
+        <span class="portfolio-pie-swatch" style="--swatch:${palette[index % palette.length]}" aria-hidden="true"></span>
+        <strong class="portfolio-pie-label">${esc(item.label)}</strong>
+        <span class="portfolio-pie-percent">${fmt(item.weightPercent)}</span>
+      </li>
+    `).join("");
+
+    return `
+      <div class="portfolio-pie-wrap">
+        <svg class="portfolio-pie" viewBox="0 0 100 100" role="img" aria-labelledby="${chartId}-title" aria-describedby="${chartId}-legend">
+          <title id="${chartId}-title">${esc(copy.allocation)}</title>
+          <circle cx="50" cy="50" r="44" fill="var(--panel-strong)" />
+          ${slices}
+          <circle class="portfolio-pie-outline" cx="50" cy="50" r="42" />
+        </svg>
+        <ul class="portfolio-pie-legend" id="${chartId}-legend">${legend}</ul>
+      </div>
+    `;
+  }
+
+  fetch("/api/portfolio/public")
+    .then((response) => response.ok ? response.json() : Promise.reject())
+    .then((data) => {
+      roots.forEach((root, rootIndex) => {
+        const state = root.querySelector("[data-portfolio-state]");
+        if (!state) return;
+        const locale = root.getAttribute("data-portfolio-locale");
+        const copy = copyFor(locale);
+        const assetItems = allocationItems(data.assetAllocation);
+        const regionItems = allocationItems(data.regionAllocation);
+        const pie = renderPieChart(assetItems, `portfolio-pie-${rootIndex}`, copy);
+        const assets = assetItems.length ? assetItems.map(bar).join("") : `<p class='muted'>${esc(copy.noData)}</p>`;
+        const regions = regionItems.length ? regionItems.map(bar).join("") : "";
+        const freshness = data.quoteFreshness?.latestFetchedAt
+          ? `${copy.quotesFetched} ${esc(new Date(data.quoteFreshness.latestFetchedAt).toLocaleString())}`
+          : copy.quotesUnavailable;
+        const stale = data.quoteFreshness?.staleCount || data.quoteFreshness?.missingCount
+          ? `<p class="muted">${esc(data.quoteFreshness.staleCount || 0)} ${copy.stale} · ${esc(data.quoteFreshness.missingCount || 0)} ${copy.unpriced}</p>`
+          : "";
+        state.innerHTML = `
+          <div class="card">
+            <h3>${copy.totalReturn}</h3>
+            <p style="font-size:2rem;margin:0">${fmt(data.totalReturnPercent || 0)}</p>
+            <p class="muted">${copy.asOf} ${esc(data.asOf || copy.notSet)}</p>
+            <p class="muted">${freshness}</p>
+            ${stale}
+          </div>
+          <div class="card portfolio-allocation-card">
+            <h3>${copy.allocation}</h3>
+            ${pie}
+            <div class="grid">${assets}</div>
+          </div>
+          ${regions ? `<div class="card"><h3>Regions</h3><div class="grid">${regions}</div></div>` : ""}
+        `;
+      });
+    })
+    .catch(() => {
+      for (const root of roots) {
+        const state = root.querySelector("[data-portfolio-state]");
+        if (state) state.innerHTML = "<div class='card'><p class='muted'>Portfolio API is not available yet.</p></div>";
+      }
+    });
+</script>

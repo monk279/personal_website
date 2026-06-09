@@ -1,0 +1,69 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: zhaohe
+      POSTGRES_USER: zhaohe
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U zhaohe -d zhaohe"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: .
+    restart: unless-stopped
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./public/uploads:/app/public/uploads
+      - ./backups:/app/backups
+    expose:
+      - "3000"
+    healthcheck:
+      test: ["CMD", "bun", "-e", "const r=await fetch('http://127.0.0.1:3000/api/health'); process.exit(r.ok?0:1)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  caddy:
+    build:
+      context: .
+      target: caddy
+    restart: unless-stopped
+    depends_on:
+      app:
+        condition: service_healthy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+      - ./public/uploads:/srv/uploads:ro
+
+  backup:
+    build:
+      context: .
+      target: backup
+    restart: unless-stopped
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./backups:/backups
+      - ./public/uploads:/uploads:ro
+
+volumes:
+  postgres_data:
+  caddy_data:
+  caddy_config:

@@ -1,0 +1,53 @@
+---
+import type { Locale } from "@/config/site";
+
+type Props = {
+  locale: Locale;
+  limit?: number;
+};
+
+const { locale, limit = 6 } = Astro.props;
+---
+
+<div data-editable-posts data-locale={locale} data-limit={limit} hidden></div>
+
+<script>
+  const escapeContentHtml = (value: unknown) => String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+
+  for (const root of document.querySelectorAll("[data-editable-posts]")) {
+    const locale = root.getAttribute("data-locale") || "en";
+    const limit = root.getAttribute("data-limit") || "6";
+    fetch(`/api/content/posts?lang=${encodeURIComponent(locale)}&limit=${encodeURIComponent(limit)}`)
+      .then((response) => response.ok ? response.json() : Promise.reject())
+      .then((data) => {
+        const posts = data.posts || [];
+        if (!posts.length) return;
+        root.removeAttribute("hidden");
+        root.innerHTML = `
+          <div class="blog-list grid two">
+            ${posts.map((post: any) => `
+              <article class="post-card weblog-entry">
+                <div class="meta">
+                  <span>${escapeContentHtml(post.publishedAt ? new Date(post.publishedAt).toLocaleDateString() : "")}</span>
+                  <span>${escapeContentHtml(post.category)}</span>
+                  <span>Web editor</span>
+                </div>
+                <h3><a href="${escapeContentHtml(post.href)}">${escapeContentHtml(post.title)}</a></h3>
+                <p>${escapeContentHtml(post.description)}</p>
+                <div class="tag-row" style="margin-top:auto">
+                  ${(post.tags || []).map((tag: string) => `<span class="tag">${escapeContentHtml(tag)}</span>`).join("")}
+                </div>
+                <p><a class="read-link" href="${escapeContentHtml(post.href)}">${locale === "zh" ? "继续阅读" : "Read more"}</a></p>
+              </article>
+            `).join("")}
+          </div>
+        `;
+      })
+      .catch(() => {});
+  }
+</script>

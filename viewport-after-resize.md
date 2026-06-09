@@ -1,0 +1,10 @@
+- generic [active] [ref=e1] [box=0,0,2048,2645]:
+  - generic [ref=e2] [box=0,0,2048,2645]:
+    - banner [ref=e3] [box=0,0,2048,65]
+    - main [ref=e18] [box=0,65,2048,2464]
+    - contentinfo [ref=e135] [box=0,2529,2048,116]
+  - generic [ref=e140] [box=938,1169,173,40]:
+    - button "Menu" [ref=e141] [box=938,1169,42,40]
+    - button "Inspect" [ref=e147] [box=980,1169,44,40]
+    - button "Audit" [ref=e151] [box=1024,1169,44,40]
+    - button "Settings" [ref=e159] [box=1069,1169,42,40]

@@ -1,0 +1,21 @@
+zhaohe.me, www.zhaohe.me {
+	root * /srv
+	encode zstd gzip
+
+	handle /api/* {
+		reverse_proxy app:3000
+	}
+
+	handle /blog/* {
+		reverse_proxy app:3000
+	}
+
+	handle /zh/blog/* {
+		reverse_proxy app:3000
+	}
+
+	handle {
+		try_files {path} {path}/ /404.html
+		file_server
+	}
+}

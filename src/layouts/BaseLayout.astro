@@ -1,0 +1,42 @@
+---
+import { site, type Locale } from "@/config/site";
+import ProfileHydrator from "@/components/ProfileHydrator.astro";
+import SiteFooter from "@/components/SiteFooter.astro";
+import SiteHeader from "@/components/SiteHeader.astro";
+import "@/styles/global.css";
+
+type Props = {
+  title: string;
+  description: string;
+  locale?: Locale;
+  path?: string;
+  showLanguage?: boolean;
+  adminMode?: boolean;
+};
+
+const { title, description, locale = "en", path = Astro.url.pathname, showLanguage = true, adminMode = false } = Astro.props;
+const pageTitle = title === site.name ? title : `${title} | ${site.name}`;
+---
+
+<!doctype html>
+<html lang={locale}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#ffffff" />
+    <link rel="canonical" href={new URL(path, site.url).toString()} />
+    <link rel="icon" href="/assets/zhaohe-avatar.png" />
+    <title>{pageTitle}</title>
+  </head>
+  <body>
+    <div class="site-shell">
+      <SiteHeader locale={locale} path={path} showLanguage={showLanguage} adminMode={adminMode} />
+      <main>
+        <slot />
+      </main>
+      <SiteFooter locale={locale} />
+      <ProfileHydrator locale={locale} />
+    </div>
+  </body>
+</html>

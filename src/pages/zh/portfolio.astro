@@ -1,0 +1,31 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import CommentSection from "@/components/CommentSection.astro";
+import PortfolioPublic from "@/components/PortfolioPublic.astro";
+---
+
+<BaseLayout title="投资组合" description="公开的配置比例与百分比收益。" locale="zh" path="/zh/portfolio">
+  <section class="container ben-page-hero ben-page-hero-compact">
+    <p class="ben-kicker">投资分享</p>
+    <h1>公开比例，而不是账户规模。</h1>
+    <p>这个页面只展示公开百分比：配置、暴露、百分比收益和报价新鲜度。数量、成本和市值保留在后台。</p>
+  </section>
+
+  <section class="ben-section">
+    <div class="container">
+      <PortfolioPublic locale="zh" />
+    </div>
+  </section>
+
+  <section class="ben-section ben-section-last">
+    <div class="container ben-notes">
+      <div>
+        <p class="ben-kicker">说明</p>
+        <h2>隐私边界</h2>
+      </div>
+      <p>公开页面只保留比例和报价新鲜度。这是个人记录，不构成投资建议。</p>
+    </div>
+  </section>
+
+  <CommentSection locale="zh" slug="portfolio" targetType="portfolio" />
+</BaseLayout>
